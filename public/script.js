@@ -1,8 +1,8 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const ADMIN_ID = 6965294597; // ЗАМЕНИ НА СВОЙ TELEGRAM ID
-const SELLER_USERNAME = 'ZloyXSanta'; // ЗАМЕНИ НА СВОЙ USERNAME БЕЗ @
+const ADMIN_ID = 6965294597; // ЗАМЕНИ НА СВОЙ ID
+const SELLER_USERNAME = 'ZloyXSanta'; // ЗАМЕНИ НА СВОЙ USERNAME
 
 const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
 let currentAccount = null;
@@ -12,7 +12,6 @@ if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 }
 
-// Превью фото при выборе файла
 function previewImage(event) {
     const file = event.target.files[0];
     if (file) {
@@ -32,46 +31,93 @@ async function loadAccounts() {
         const accounts = await response.json();
         renderAccounts(accounts);
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('Ошибка:', error);
     }
 }
 
 function renderAccounts(accounts) {
-    const grid = document.getElementById('accountsGrid');
+    const list = document.getElementById('accountsList');
     const emptyState = document.getElementById('emptyState');
 
     if (accounts.length === 0) {
-        grid.style.display = 'none';
+        list.style.display = 'none';
         emptyState.style.display = 'block';
         return;
     }
 
-    grid.style.display = 'grid';
+    list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    grid.innerHTML = accounts.map(account => `
+    list.innerHTML = accounts.map((account, index) => `
         <div class="account-card" onclick="openBuyModal(${account.id})">
-            ${isAdmin ? `<button class="btn btn-delete" onclick="deleteAccount(${account.id}, event)">Удалить</button>` : ''}
+            ${index === 0 ? `
+                <div class="top-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    ТОП АККАУНТ
+                </div>
+            ` : ''}
+            ${isAdmin ? `<button class="delete-btn" onclick="deleteAccount(${account.id}, event)">УДАЛИТЬ</button>` : ''}
+            
             ${account.photo 
                 ? `<img src="${account.photo}" class="account-photo" alt="${account.name}">`
                 : `<div class="account-photo-placeholder">🎮</div>`
             }
-            <div class="account-info">
-                <div class="account-name">${account.name}</div>
-                <div class="account-rank">⭐ ${account.rank}</div>
+            
+            <div class="account-body">
                 <div class="account-stats">
-                    <div class="stat">
-                        <div class="stat-label">Герои</div>
-                        <div class="stat-value">${account.heroes}</div>
+                    <div class="stat-item">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Герои</div>
+                            <div class="stat-value">${account.heroes}</div>
+                        </div>
                     </div>
-                    <div class="stat">
-                        <div class="stat-label">Скины</div>
-                        <div class="stat-value">${account.skins}</div>
+                    <div class="stat-item">
+                        <div class="stat-icon"></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Скины</div>
+                            <div class="stat-value">${account.skins}</div>
+                        </div>
+                    </div>
+                    <div class="rank-badge">
+                        💎 ${account.rank.toUpperCase()}
                     </div>
                 </div>
-                <div class="account-price">${account.price} ₽</div>
-                ${account.description ? `<div class="account-description">${account.description}</div>` : ''}
-                <button class="btn btn-buy">КУПИТЬ</button>
+                
+                <div class="account-description">${account.description || account.name}</div>
+                
+                <div class="account-badges">
+                    <div class="badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        Безопасная сделка
+                    </div>
+                    <div class="badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Быстрая выдача
+                    </div>
+                    <div class="badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Поддержка 24/7
+                    </div>
+                </div>
+                
+                <div class="account-footer">
+                    <div class="account-price">${account.price.toLocaleString()} ₽</div>
+                    <button class="btn-details">
+                        Подробнее
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     `).join('');
@@ -97,17 +143,16 @@ function openBuyModal(accountId) {
             if (currentAccount) {
                 document.getElementById('buyDetails').innerHTML = `
                     ${currentAccount.photo 
-                        ? `<img src="${currentAccount.photo}" class="buy-photo" alt="${currentAccount.name}">`
+                        ? `<img src="${currentAccount.photo}" class="buy-photo">`
                         : ''
                     }
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 10px;">${currentAccount.name}</h3>
-                        <p style="margin-bottom: 5px;"><strong>Ранг:</strong> ${currentAccount.rank}</p>
-                        <p style="margin-bottom: 5px;"><strong>Герои:</strong> ${currentAccount.heroes}</p>
-                        <p style="margin-bottom: 5px;"><strong>Скины:</strong> ${currentAccount.skins}</p>
-                        <p style="margin-bottom: 15px; font-size: 1.3em; color: #4ade80;"><strong>Цена:</strong> ${currentAccount.price} ₽</p>
-                        ${currentAccount.description ? `<p style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;"><strong>Описание:</strong><br>${currentAccount.description}</p>` : ''}
+                    <div class="buy-title">${currentAccount.description || currentAccount.name}</div>
+                    <div class="buy-desc">
+                        <strong>Ранг:</strong> ${currentAccount.rank}<br>
+                        <strong>Герои:</strong> ${currentAccount.heroes}<br>
+                        <strong>Скины:</strong> ${currentAccount.skins}
                     </div>
+                    <div class="buy-price">${currentAccount.price.toLocaleString()} ₽</div>
                 `;
                 document.getElementById('buyModal').classList.add('active');
             }
@@ -121,7 +166,7 @@ function closeBuyModal() {
 
 function contactSeller() {
     if (!currentAccount) return;
-    const message = `Привет! Хочу купить аккаунт "${currentAccount.name}" за ${currentAccount.price} ₽`;
+    const message = `Привет! Хочу купить аккаунт за ${currentAccount.price} ₽`;
     tg.openTelegramLink(`https://t.me/${SELLER_USERNAME}?text=${encodeURIComponent(message)}`);
     closeBuyModal();
 }
@@ -130,7 +175,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const account = {
-        name: document.getElementById('name').value,
+        name: document.getElementById('description').value,
         rank: document.getElementById('rank').value,
         heroes: parseInt(document.getElementById('heroes').value),
         skins: parseInt(document.getElementById('skins').value),
@@ -149,11 +194,10 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
         if (response.ok) {
             closeAddModal();
             loadAccounts();
-            tg.HapticFeedback.notificationOccurred('success');
+            tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
-        console.error('Ошибка добавления:', error);
-        tg.HapticFeedback.notificationOccurred('error');
+        console.error('Ошибка:', error);
     }
 });
 
@@ -165,10 +209,10 @@ async function deleteAccount(id, event) {
         const response = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
         if (response.ok) {
             loadAccounts();
-            tg.HapticFeedback.notificationOccurred('success');
+            tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
-        console.error('Ошибка удаления:', error);
+        console.error('Ошибка:', error);
     }
 }
 
@@ -178,6 +222,14 @@ document.getElementById('addModal').addEventListener('click', (e) => {
 
 document.getElementById('buyModal').addEventListener('click', (e) => {
     if (e.target.id === 'buyModal') closeBuyModal();
+});
+
+// Фильтры
+document.querySelectorAll('.tag').forEach(tag => {
+    tag.addEventListener('click', function() {
+        document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+    });
 });
 
 loadAccounts();
