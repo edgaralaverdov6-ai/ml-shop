@@ -3,78 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ML Accounts Shop</title>
+    <title>MLBB Accounts</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎮 ML Shop</h1>
-            <p class="subtitle">Магазин аккаунтов Mobile Legends</p>
+    <div class="app">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <path d="M20 2L4 10V20C4 30 12 38 20 40C28 38 36 30 36 20V10L20 2Z" fill="url(#logoGrad)"/>
+                        <path d="M14 15L20 10L26 15V22L20 27L14 22V15Z" fill="#fff" opacity="0.9"/>
+                        <defs>
+                            <linearGradient id="logoGrad" x1="4" y1="2" x2="36" y2="40">
+                                <stop stop-color="#8B5CF6"/>
+                                <stop offset="1" stop-color="#6D28D9"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="logo-text">
+                        <div class="logo-title">MLBB ACCOUNTS</div>
+                        <div class="logo-subtitle">МАГАЗИН АККАУНТОВ MOBILE LEGENDS</div>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <div class="admin-panel" id="adminPanel" style="display: none;">
-            <button class="btn btn-primary" onclick="openAddModal()">+ Добавить аккаунт</button>
+        <!-- Поиск и фильтры -->
+        <div class="search-section">
+            <div class="search-box">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Поиск по аккаунтам...">
+            </div>
+            <button class="filter-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                Фильтры
+            </button>
         </div>
 
-        <div class="accounts-grid" id="accountsGrid"></div>
+        <div class="filter-tags">
+            <button class="tag active">Все</button>
+            <button class="tag">С легендарками</button>
+            <button class="tag">Скины</button>
+            <button class="tag">Фулл</button>
+            <button class="tag">Премиум</button>
+        </div>
+
+        <!-- Кнопка админа -->
+        <div class="admin-panel" id="adminPanel" style="display: none;">
+            <button class="btn-add" onclick="openAddModal()">+ Добавить аккаунт</button>
+        </div>
+
+        <!-- Список аккаунтов -->
+        <div class="accounts-list" id="accountsList"></div>
 
         <div class="empty-state" id="emptyState" style="display: none;">
-            <p>📭 Пока нет аккаунтов</p>
+            <div class="empty-icon">📭</div>
+            <p>Пока нет аккаунтов</p>
         </div>
     </div>
 
-    <!-- Модальное окно добавления -->
+    <!-- Модалка добавления -->
     <div class="modal" id="addModal">
         <div class="modal-content">
             <h2>Добавить аккаунт</h2>
             <form id="addForm">
                 <div class="form-group">
-                    <label>📸 Фото аккаунта</label>
+                    <label>📸 Скриншот аккаунта</label>
                     <input type="file" id="photo" accept="image/*" onchange="previewImage(event)">
                     <div class="photo-preview" id="photoPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="name" required placeholder="Например: Жирный акк">
+                    <label>Название / Описание</label>
+                    <textarea id="description" placeholder="17 КОЛЛ ✨ ФУЛЛ ЖЖК 🏠 3 ЛЕГИ..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Ранг</label>
-                    <input type="text" id="rank" required placeholder="Mythic, Legend">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ранг</label>
+                        <input type="text" id="rank" required placeholder="Мифический">
+                    </div>
+                    <div class="form-group">
+                        <label>Цена (₽)</label>
+                        <input type="number" id="price" required placeholder="25000">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Количество героев</label>
-                    <input type="number" id="heroes" required placeholder="100">
-                </div>
-                <div class="form-group">
-                    <label>Количество скинов</label>
-                    <input type="number" id="skins" required placeholder="50">
-                </div>
-                <div class="form-group">
-                    <label>Цена (₽)</label>
-                    <input type="number" id="price" required placeholder="5000">
-                </div>
-                <div class="form-group">
-                    <label>Описание (коллекции, скины, особенности)</label>
-                    <textarea id="description" placeholder="17 КОЛЛ + ФУЛЛ ЖЖК, 3 ЛЕГИ, КОФ, НАРУТО..."></textarea>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Герои</label>
+                        <input type="number" id="heroes" required placeholder="133">
+                    </div>
+                    <div class="form-group">
+                        <label>Скины</label>
+                        <input type="number" id="skins" required placeholder="500">
+                    </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Отмена</button>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <button type="button" class="btn-cancel" onclick="closeAddModal()">Отмена</button>
+                    <button type="submit" class="btn-submit">Добавить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Модальное окно покупки -->
+    <!-- Модалка покупки -->
     <div class="modal" id="buyModal">
-        <div class="modal-content">
-            <h2>Купить аккаунт</h2>
+        <div class="modal-content buy-modal">
             <div id="buyDetails"></div>
             <div class="form-actions">
-                <button class="btn btn-secondary" onclick="closeBuyModal()">Закрыть</button>
-                <button class="btn btn-primary" onclick="contactSeller()">Связаться с продавцом</button>
+                <button class="btn-cancel" onclick="closeBuyModal()">Закрыть</button>
+                <button class="btn-submit" onclick="contactSeller()">Связаться</button>
             </div>
         </div>
     </div>
