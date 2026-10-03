@@ -38,8 +38,15 @@ async function loadAccounts() {
 function renderAccounts(accounts) {
     const list = document.getElementById('accountsList');
     const emptyState = document.getElementById('emptyState');
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-    if (accounts.length === 0) {
+    // Фильтруем по поиску
+    const filtered = accounts.filter(acc => {
+        const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
+        return text.includes(searchTerm);
+    });
+
+    if (filtered.length === 0) {
         list.style.display = 'none';
         emptyState.style.display = 'block';
         return;
@@ -48,7 +55,7 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    list.innerHTML = accounts.map((account, index) => `
+    list.innerHTML = filtered.map((account, index) => `
         <div class="account-card" onclick="openBuyModal(${account.id})">
             ${index === 0 ? `
                 <div class="top-badge">
@@ -75,7 +82,7 @@ function renderAccounts(accounts) {
                         </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-icon"></div>
+                        <div class="stat-icon">🎨</div>
                         <div class="stat-info">
                             <div class="stat-label">Скины</div>
                             <div class="stat-value">${account.skins}</div>
@@ -122,7 +129,6 @@ function renderAccounts(accounts) {
         </div>
     `).join('');
 }
-
 function openAddModal() {
     currentPhotoBase64 = null;
     document.getElementById('addModal').classList.add('active');
