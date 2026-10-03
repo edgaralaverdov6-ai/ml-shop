@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Accounts Shop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 ML Shop</h1>
+            <p class="subtitle">Магазин аккаунтов Mobile Legends</p>
+        </header>
+
+        <div class="admin-panel" id="adminPanel" style="display: none;">
+            <button class="btn btn-primary" onclick="openAddModal()">+ Добавить аккаунт</button>
+        </div>
+
+        <div class="accounts-grid" id="accountsGrid"></div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <p>📭 Пока нет аккаунтов</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2>Добавить аккаунт</h2>
+            <form id="addForm">
+                <div class="form-group">
+                    <label>📸 Фото аккаунта</label>
+                    <input type="file" id="photo" accept="image/*" onchange="previewImage(event)">
+                    <div class="photo-preview" id="photoPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="name" required placeholder="Например: Жирный акк">
+                </div>
+                <div class="form-group">
+                    <label>Ранг</label>
+                    <input type="text" id="rank" required placeholder="Mythic, Legend">
+                </div>
+                <div class="form-group">
+                    <label>Количество героев</label>
+                    <input type="number" id="heroes" required placeholder="100">
+                </div>
+                <div class="form-group">
+                    <label>Количество скинов</label>
+                    <input type="number" id="skins" required placeholder="50">
+                </div>
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <input type="number" id="price" required placeholder="5000">
+                </div>
+                <div class="form-group">
+                    <label>Описание (коллекции, скины, особенности)</label>
+                    <textarea id="description" placeholder="17 КОЛЛ + ФУЛЛ ЖЖК, 3 ЛЕГИ, КОФ, НАРУТО..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно покупки -->
+    <div class="modal" id="buyModal">
+        <div class="modal-content">
+            <h2>Купить аккаунт</h2>
+            <div id="buyDetails"></div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeBuyModal()">Закрыть</button>
+                <button class="btn btn-primary" onclick="contactSeller()">Связаться с продавцом</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
