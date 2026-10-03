@@ -7,6 +7,7 @@ const SELLER_USERNAME = 'ZloyXSanta'; // ЗАМЕНИ НА СВОЙ USERNAME
 const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
 let currentAccount = null;
 let currentPhotoBase64 = null;
+let allAccounts = []; // Храним все аккаунты
 
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
@@ -29,24 +30,32 @@ async function loadAccounts() {
     try {
         const response = await fetch('/api/accounts');
         const accounts = await response.json();
-        renderAccounts(accounts);
+        allAccounts = accounts; // Сохраняем все аккаунты
+        applySearch(); // Применяем поиск (или показываем все)
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка загрузки:', error);
     }
+}
+
+function applySearch() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    // Если поиск пустой — показываем ВСЕ аккаунты
+    const filtered = searchTerm === '' 
+        ? allAccounts 
+        : allAccounts.filter(acc => {
+            const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
+            return text.includes(searchTerm);
+        });
+
+    renderAccounts(filtered);
 }
 
 function renderAccounts(accounts) {
     const list = document.getElementById('accountsList');
     const emptyState = document.getElementById('emptyState');
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-    // Фильтруем по поиску
-    const filtered = accounts.filter(acc => {
-        const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
-        return text.includes(searchTerm);
-    });
-
-    if (filtered.length === 0) {
+    if (accounts.length === 0) {
         list.style.display = 'none';
         emptyState.style.display = 'block';
         return;
@@ -55,7 +64,7 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    list.innerHTML = filtered.map((account, index) => `
+    list.innerHTML = accounts.map((account, index) => `
         <div class="account-card" onclick="openBuyModal(${account.id})">
             ${index === 0 ? `
                 <div class="top-badge">
@@ -129,6 +138,7 @@ function renderAccounts(accounts) {
         </div>
     `).join('');
 }
+
 function openAddModal() {
     currentPhotoBase64 = null;
     document.getElementById('addModal').classList.add('active');
@@ -142,27 +152,24 @@ function closeAddModal() {
 }
 
 function openBuyModal(accountId) {
-    fetch('/api/accounts')
-        .then(response => response.json())
-        .then(accounts => {
-            currentAccount = accounts.find(acc => acc.id === accountId);
-            if (currentAccount) {
-                document.getElementById('buyDetails').innerHTML = `
-                    ${currentAccount.photo 
-                        ? `<img src="${currentAccount.photo}" class="buy-photo">`
-                        : ''
-                    }
-                    <div class="buy-title">${currentAccount.description || currentAccount.name}</div>
-                    <div class="buy-desc">
-                        <strong>Ранг:</strong> ${currentAccount.rank}<br>
-                        <strong>Герои:</strong> ${currentAccount.heroes}<br>
-                        <strong>Скины:</strong> ${currentAccount.skins}
-                    </div>
-                    <div class="buy-price">${currentAccount.price.toLocaleString()} ₽</div>
-                `;
-                document.getElementById('buyModal').classList.add('active');
+    const account = allAccounts.find(acc => acc.id === accountId);
+    if (account) {
+        currentAccount = account;
+        document.getElementById('buyDetails').innerHTML = `
+            ${account.photo 
+                ? `<img src="${account.photo}" class="buy-photo">`
+                : ''
             }
-        });
+            <div class="buy-title">${account.description || account.name}</div>
+            <div class="buy-desc">
+                <strong>Ранг:</strong> ${account.rank}<br>
+                <strong>Герои:</strong> ${account.heroes}<br>
+                <strong>Скины:</strong> ${account.skins}
+            </div>
+            <div class="buy-price">${account.price.toLocaleString()} ₽</div>
+        `;
+        document.getElementById('buyModal').classList.add('active');
+    }
 }
 
 function closeBuyModal() {
@@ -199,11 +206,11 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
         if (response.ok) {
             closeAddModal();
-            loadAccounts();
+            await loadAccounts(); // Перезагружаем после добавления
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка добавления:', error);
     }
 });
 
@@ -214,11 +221,11 @@ async function deleteAccount(id, event) {
     try {
         const response = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
         if (response.ok) {
-            loadAccounts();
+            await loadAccounts(); // Перезагружаем после удаления
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка удаления:', error);
     }
 }
 
@@ -229,8 +236,11 @@ document.getElementById('addModal').addEventListener('click', (e) => {
 document.getElementById('buyModal').addEventListener('click', (e) => {
     if (e.target.id === 'buyModal') closeBuyModal();
 });
-// Поиск
+
+// Поиск — работает в реальном времени
 document.getElementById('searchInput').addEventListener('input', () => {
-    loadAccounts();
+    applySearch();
 });
 
+// Загружаем аккаунты сразу при открытии
+loadAccounts();
