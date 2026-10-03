@@ -229,5 +229,8 @@ document.getElementById('addModal').addEventListener('click', (e) => {
 document.getElementById('buyModal').addEventListener('click', (e) => {
     if (e.target.id === 'buyModal') closeBuyModal();
 });
+// Поиск
+document.getElementById('searchInput').addEventListener('input', () => {
+    loadAccounts();
+});
 
-loadAccounts();
