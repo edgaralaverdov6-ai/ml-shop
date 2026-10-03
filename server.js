@@ -58,7 +58,7 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(chatId, '🎮 Добро пожаловать в магазин аккаунтов Mobile Legends!', {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🛒 Открыть магазин', web_app: { url: 'https://gratified-unscented-sardine.ngrok-free.dev' } }]
+        [{ text: '🛒 Открыть магазин', web_app: { url: 'https://ml-shop.onrender.com' } }]
       ]
     }
   });
