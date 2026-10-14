@@ -1,13 +1,13 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const ADMIN_ID = 6965294597; // ЗАМЕНИ НА СВОЙ ID
-const SELLER_USERNAME = 'ZloyXSanta'; // ЗАМЕНИ НА СВОЙ USERNAME
+const ADMIN_ID = 6965294597; 
+const SELLER_USERNAME = 'ZloyXSanta'; 
 
 const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
 let currentAccount = null;
 let currentPhotoBase64 = null;
-let allAccounts = []; // Храним все аккаунты
+let allAccounts = []; 
 
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
@@ -30,8 +30,8 @@ async function loadAccounts() {
     try {
         const response = await fetch('/api/accounts');
         const accounts = await response.json();
-        allAccounts = accounts; // Сохраняем все аккаунты
-        applySearch(); // Применяем поиск (или показываем все)
+        allAccounts = accounts; 
+        applySearch(); 
     } catch (error) {
         console.error('Ошибка загрузки:', error);
     }
@@ -40,7 +40,6 @@ async function loadAccounts() {
 function applySearch() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
 
-    // Если поиск пустой — показываем ВСЕ аккаунты
     const filtered = searchTerm === '' 
         ? allAccounts 
         : allAccounts.filter(acc => {
@@ -64,8 +63,9 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
+    // ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: добавлены кавычки и _id вместо id
     list.innerHTML = accounts.map((account, index) => `
-        <div class="account-card" onclick="openBuyModal(${account.id})">
+        <div class="account-card" onclick="openBuyModal('${account._id}')">
             ${index === 0 ? `
                 <div class="top-badge">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -74,7 +74,7 @@ function renderAccounts(accounts) {
                     ТОП АККАУНТ
                 </div>
             ` : ''}
-            ${isAdmin ? `<button class="delete-btn" onclick="deleteAccount(${account.id}, event)">УДАЛИТЬ</button>` : ''}
+            ${isAdmin ? `<button class="delete-btn" onclick="deleteAccount('${account._id}', event)">УДАЛИТЬ</button>` : ''}
             
             ${account.photo 
                 ? `<img src="${account.photo}" class="account-photo" alt="${account.name}">`
@@ -151,8 +151,9 @@ function closeAddModal() {
     currentPhotoBase64 = null;
 }
 
+// ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: сравнение через String(acc._id)
 function openBuyModal(accountId) {
-    const account = allAccounts.find(acc => acc.id === accountId);
+    const account = allAccounts.find(acc => String(acc._id) === String(accountId));
     if (account) {
         currentAccount = account;
         document.getElementById('buyDetails').innerHTML = `
@@ -206,7 +207,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
         if (response.ok) {
             closeAddModal();
-            await loadAccounts(); // Перезагружаем после добавления
+            await loadAccounts(); 
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
@@ -214,14 +215,15 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     }
 });
 
-async function deleteAccount(id, event) {
+// ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: параметр теперь называется accountId
+async function deleteAccount(accountId, event) {
     event.stopPropagation();
     if (!confirm('Удалить этот аккаунт?')) return;
 
     try {
-        const response = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+        const response = await fetch(`/api/accounts/${accountId}`, { method: 'DELETE' });
         if (response.ok) {
-            await loadAccounts(); // Перезагружаем после удаления
+            await loadAccounts(); 
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
@@ -237,10 +239,8 @@ document.getElementById('buyModal').addEventListener('click', (e) => {
     if (e.target.id === 'buyModal') closeBuyModal();
 });
 
-// Поиск — работает в реальном времени
 document.getElementById('searchInput').addEventListener('input', () => {
     applySearch();
 });
 
-// Загружаем аккаунты сразу при открытии
 loadAccounts();
