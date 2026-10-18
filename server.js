@@ -51,7 +51,10 @@ const User = mongoose.model('User', userSchema);
 
 app.get('/api/accounts', async (req, res) => {
   try {
-    const accounts = await Account.find().sort({ createdAt: -1 }).allowDiskUse(true);
+    const accounts = await Account.aggregate([
+      { $sort: { createdAt: -1 } }
+    ]).allowDiskUse(true);
+    
     res.json(accounts);
   } catch (error) {
     res.status(500).json({ error: error.message });
