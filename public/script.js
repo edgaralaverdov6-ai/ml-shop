@@ -40,23 +40,6 @@ async function loadAccounts() {
     }
 }}
 
-function updateLoadMoreButton() {
-    let btn = document.getElementById('loadMoreBtn');
-    
-    if (hasMore && !btn) {
-        btn = document.createElement('button');
-        btn.id = 'loadMoreBtn';
-        btn.className = 'btn-load-more';
-        btn.textContent = 'Показать ещё ↓';
-        btn.onclick = () => loadAccounts(false);
-        
-        const list = document.getElementById('accountsList');
-        list.parentNode.insertBefore(btn, list.nextSibling);
-    } else if (!hasMore && btn) {
-        btn.remove();
-    }
-}
-
 function renderAccounts(accounts) {
     const list = document.getElementById('accountsList');
     const emptyState = document.getElementById('emptyState');
