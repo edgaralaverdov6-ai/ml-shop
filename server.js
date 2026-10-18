@@ -56,14 +56,27 @@ const User = mongoose.model('User', userSchema);
 
 app.get('/api/accounts', async (req, res) => {
   try {
-    const accounts = await Account.find().sort({ createdAt: -1 });
-    res.json(accounts);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+    
+    const accounts = await Account.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await Account.countDocuments();
+    
+    res.json({ 
+      accounts, 
+      hasMore: skip + accounts.length < total,
+      total 
+    });
   } catch (error) {
     console.error('Ошибка получения аккаунтов:', error);
     res.status(500).json({ error: error.message });
   }
 });
-
 // Загрузка фото в Cloudinary
 app.post('/api/upload-photo', async (req, res) => {
   try {
