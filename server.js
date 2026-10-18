@@ -7,7 +7,6 @@ const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const ADMIN_ID = 6965294597;
 
 app.use(express.json({ limit: '10mb' }));
@@ -16,19 +15,15 @@ app.use(express.static('public'));
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-// Настройка Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB подключена'))
   .catch(err => console.error('❌ Ошибка MongoDB:', err));
-
-// ================= СХЕМЫ БАЗЫ ДАННЫХ =================
 
 const accountSchema = new mongoose.Schema({
   name: String,
@@ -52,12 +47,63 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
+// ================= МИГРАЦИЯ СТАРЫХ ФОТО =================
+app.get('/migrate-photos', async (req, res) => {
+  try {
+    const oldAccounts = await Account.find({ 
+      photo: { $regex: /^data:image/ } 
+    });
+
+    if (oldAccounts.length === 0) {
+      return res.json({ 
+        message: '✅ Все фото уже в Cloudinary! Миграция не нужна.',
+        total: await Account.countDocuments()
+      });
+    }
+
+    res.json({ 
+      message: `⏳ Начинаем миграцию ${oldAccounts.length} фото. Открой эту страницу через 60 секунд.`,
+      total: oldAccounts.length
+    });
+
+    (async () => {
+      let success = 0;
+      let failed = 0;
+      
+      for (const account of oldAccounts) {
+        try {
+          const result = await cloudinary.uploader.upload(account.photo, {
+            folder: 'mlbb-accounts',
+            quality: 80,
+            width: 800,
+            crop: 'limit'
+          });
+          
+          account.photo = result.secure_url;
+          await account.save();
+          success++;
+          console.log(`✅ [${success}/${oldAccounts.length}] Мигрирован: ${account.name}`);
+        } catch (err) {
+          failed++;
+          console.error(`❌ [${failed}] Ошибка: ${account.name} - ${err.message}`);
+        }
+      }
+      
+      console.log(`🎉 Миграция завершена! Успешно: ${success}, Ошибок: ${failed}`);
+    })();
+
+  } catch (error) {
+    console.error('Ошибка миграции:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ================= API РОУТЫ =================
 
 app.get('/api/accounts', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 5;
+    const limit = 10;
     const skip = (page - 1) * limit;
     
     const accounts = await Account.find()
@@ -73,18 +119,15 @@ app.get('/api/accounts', async (req, res) => {
       total 
     });
   } catch (error) {
-    console.error('Ошибка получения аккаунтов:', error);
+    console.error('Ошибка:', error);
     res.status(500).json({ error: error.message });
   }
 });
-// Загрузка фото в Cloudinary
+
 app.post('/api/upload-photo', async (req, res) => {
   try {
     const { photo } = req.body;
-    
-    if (!photo) {
-      return res.status(400).json({ error: 'Нет фото' });
-    }
+    if (!photo) return res.status(400).json({ error: 'Нет фото' });
 
     const result = await cloudinary.uploader.upload(photo, {
       folder: 'mlbb-accounts',
@@ -95,16 +138,14 @@ app.post('/api/upload-photo', async (req, res) => {
 
     res.json({ url: result.secure_url });
   } catch (error) {
-    console.error('Ошибка загрузки фото:', error);
+    console.error('Ошибка загрузки:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 app.post('/api/accounts', async (req, res) => {
   try {
-    const account = new Account({ 
-      ...req.body, 
-      createdAt: new Date() 
-    });
+    const account = new Account({ ...req.body, createdAt: new Date() });
     await account.save();
     res.json(account);
   } catch (error) {
@@ -121,8 +162,6 @@ app.delete('/api/accounts/:id', async (req, res) => {
   }
 });
 
-// ================= ОБРАБОТЧИК /start =================
-
 bot.onText(/\/start/, async (msg) => {
   const userId = msg.from.id;
   const username = msg.from.username || 'нет username';
@@ -137,15 +176,14 @@ bot.onText(/\/start/, async (msg) => {
       { upsert: true, new: true }
     );
   } catch (err) {
-    console.error('Ошибка сохранения пользователя:', err);
+    console.error('Ошибка:', err);
   }
 
   const notification = `
- <b>Новый пользователь нажал /start!</b>
-
+🔔 <b>Новый пользователь!</b>
 👤 <b>Имя:</b> ${fullName}
 🆔 <b>Username:</b> @${username}
- <b>ID:</b> <code>${userId}</code>
+🔢 <b>ID:</b> <code>${userId}</code>
 📅 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
   `;
 
