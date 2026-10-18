@@ -48,10 +48,21 @@ const User = mongoose.model('User', userSchema);
 // ✅ Теперь сортировка идёт через MongoDB (с индексом — мгновенно!)
 app.get('/api/accounts', async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; // Загружаем только по 5 аккаунтов за раз
+    const skip = (page - 1) * limit;
+    
+    // Сортируем и берем только нужное количество
     const accounts = await Account.find()
       .sort({ createdAt: -1 })
-      .allowDiskUse(true);
-    res.json(accounts);
+      .skip(skip)
+      .limit(limit);
+    
+    // Проверяем, есть ли ещё аккаунты
+    const total = await Account.countDocuments();
+    const hasMore = skip + accounts.length < total;
+
+    res.json({ accounts, hasMore });
   } catch (error) {
     console.error('Ошибка получения аккаунтов:', error);
     res.status(500).json({ error: error.message });
