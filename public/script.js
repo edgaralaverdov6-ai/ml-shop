@@ -26,17 +26,63 @@ function previewImage(event) {
     }
 }
 
-async function loadAccounts() {
+let currentPage = 1;
+let hasMoreAccounts = true;
+let isLoading = false;
+
+async function loadAccounts(reset = false) {
+    if (isLoading) return;
+    isLoading = true;
+
+    if (reset) {
+        currentPage = 1;
+        hasMoreAccounts = true;
+        allAccounts = [];
+    }
+    
     try {
-        const response = await fetch('/api/accounts');
-        const accounts = await response.json();
-        allAccounts = accounts; 
-        applySearch(); 
+        const response = await fetch(`/api/accounts?page=${currentPage}`);
+        const data = await response.json();
+        
+        if (reset) {
+            allAccounts = data.accounts;
+        } else {
+            allAccounts = [...allAccounts, ...data.accounts];
+        }
+        
+        hasMoreAccounts = data.hasMore;
+        applySearch();
+        
+        // Управляем кнопкой "Показать ещё"
+        updateLoadMoreButton();
+        
+        currentPage++;
     } catch (error) {
         console.error('Ошибка загрузки:', error);
+    } finally {
+        isLoading = false;
     }
 }
 
+function updateLoadMoreButton() {
+    let btn = document.getElementById('loadMoreBtn');
+    
+    // Если аккаунты ещё есть и кнопки нет - создаем её
+    if (hasMoreAccounts && !btn) {
+        btn = document.createElement('button');
+        btn.id = 'loadMoreBtn';
+        btn.className = 'btn-load-more';
+        btn.textContent = 'Показать ещё аккаунты ↓';
+        btn.onclick = () => loadAccounts(false);
+        
+        const list = document.getElementById('accountsList');
+        list.parentNode.insertBefore(btn, list.nextSibling);
+    } 
+    // Если аккаунтов больше нет, а кнопка есть - удаляем её
+    else if (!hasMoreAccounts && btn) {
+        btn.remove();
+    }
+}
 function applySearch() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
 
