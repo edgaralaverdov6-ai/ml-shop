@@ -29,37 +29,16 @@ function previewImage(event) {
     }
 }
 
-async function loadAccounts(reset = false) {
-    if (isLoading) return;
-    isLoading = true;
-
-    if (reset) {
-        currentPage = 1;
-        hasMore = true;
-        allAccounts = [];
-    }
-    
+async function loadAccounts() {
     try {
-        const response = await fetch(`/api/accounts?page=${currentPage}`);
-        const data = await response.json();
-        
-        if (reset) {
-            allAccounts = data.accounts;
-        } else {
-            allAccounts = [...allAccounts, ...data.accounts];
-        }
-        
-        hasMore = data.hasMore;
-        renderAccounts(allAccounts);
-        updateLoadMoreButton();
-        
-        currentPage++;
+        const response = await fetch('/api/accounts');
+        const accounts = await response.json();
+        allAccounts = accounts;
+        renderAccounts(accounts);
     } catch (error) {
         console.error('Ошибка загрузки:', error);
-    } finally {
-        isLoading = false;
     }
-}
+}}
 
 function updateLoadMoreButton() {
     let btn = document.getElementById('loadMoreBtn');
