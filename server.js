@@ -51,12 +51,15 @@ const User = mongoose.model('User', userSchema);
 
 app.get('/api/accounts', async (req, res) => {
   try {
-    const accounts = await Account.aggregate([
-      { $sort: { createdAt: -1 } }
-    ]).allowDiskUse(true);
+    // Получаем все аккаунты без сортировки
+    const accounts = await Account.find();
+    
+    // Сортируем на стороне Node.js (по убыванию createdAt)
+    accounts.sort((a, b) => b.createdAt - a.createdAt);
     
     res.json(accounts);
   } catch (error) {
+    console.error('Ошибка получения аккаунтов:', error);
     res.status(500).json({ error: error.message });
   }
 });
