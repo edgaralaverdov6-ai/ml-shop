@@ -51,13 +51,12 @@ const User = mongoose.model('User', userSchema);
 
 app.get('/api/accounts', async (req, res) => {
   try {
-    const accounts = await Account.find().sort({ createdAt: -1 });
+    const accounts = await Account.find().sort({ createdAt: -1 }).allowDiskUse(true);
     res.json(accounts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 app.post('/api/accounts', async (req, res) => {
   try {
     const account = new Account({ ...req.body, createdAt: new Date() });
