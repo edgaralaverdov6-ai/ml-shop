@@ -234,17 +234,44 @@ function contactSeller() {
 document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const account = {
-        name: document.getElementById('description').value,
-        rank: document.getElementById('rank').value,
-        heroes: parseInt(document.getElementById('heroes').value),
-        skins: parseInt(document.getElementById('skins').value),
-        price: parseInt(document.getElementById('price').value),
-        description: document.getElementById('description').value,
-        photo: currentPhotoBase64
-    };
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : 'Добавить';
+    if (submitBtn) {
+        submitBtn.textContent = 'Загрузка фото...';
+        submitBtn.disabled = true;
+    }
 
     try {
+        let photoUrl = null;
+
+        // Сначала загружаем фото в Cloudinary
+        if (currentPhotoBase64) {
+            const uploadResponse = await fetch('/api/upload-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: currentPhotoBase64 })
+            });
+            const uploadData = await uploadResponse.json();
+            
+            if (!uploadResponse.ok) {
+                throw new Error(uploadData.error || 'Ошибка загрузки фото');
+            }
+            
+            photoUrl = uploadData.url;
+            console.log('Фото загружено:', photoUrl);
+        }
+
+        // Создаём аккаунт со ссылкой на фото
+        const account = {
+            name: document.getElementById('description').value,
+            rank: document.getElementById('rank').value,
+            heroes: parseInt(document.getElementById('heroes').value),
+            skins: parseInt(document.getElementById('skins').value),
+            price: parseInt(document.getElementById('price').value),
+            description: document.getElementById('description').value,
+            photo: photoUrl
+        };
+
         const response = await fetch('/api/accounts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -253,14 +280,21 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
         if (response.ok) {
             closeAddModal();
-            await loadAccounts(); 
+            await loadAccounts();
             tg.HapticFeedback?.notificationOccurred('success');
+        } else {
+            const err = await response.json();
+            console.error('Ошибка создания аккаунта:', err);
         }
     } catch (error) {
         console.error('Ошибка добавления:', error);
+    } finally {
+        if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
     }
 });
-
 // ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: параметр теперь называется accountId
 async function deleteAccount(accountId, event) {
     event.stopPropagation();
