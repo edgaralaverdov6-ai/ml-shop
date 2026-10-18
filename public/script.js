@@ -8,9 +8,6 @@ const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
 let currentAccount = null;
 let currentPhotoBase64 = null;
 let allAccounts = [];
-let currentPage = 1;
-let hasMore = true;
-let isLoading = false;
 
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
@@ -38,7 +35,7 @@ async function loadAccounts() {
     } catch (error) {
         console.error('Ошибка загрузки:', error);
     }
-}}
+}
 
 function renderAccounts(accounts) {
     const list = document.getElementById('accountsList');
@@ -73,14 +70,14 @@ function renderAccounts(accounts) {
             <div class="account-body">
                 <div class="account-stats">
                     <div class="stat-item">
-                        <div class="stat-icon">️</div>
+                        <div class="stat-icon">⚔️</div>
                         <div class="stat-info">
                             <div class="stat-label">Герои</div>
                             <div class="stat-value">${account.heroes}</div>
                         </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-icon"></div>
+                        <div class="stat-icon">🎨</div>
                         <div class="stat-info">
                             <div class="stat-label">Скины</div>
                             <div class="stat-value">${account.skins}</div>
@@ -95,7 +92,7 @@ function renderAccounts(accounts) {
                 
                 <div class="account-badges">
                     <div class="badge">🛡️ Безопасная сделка</div>
-                    <div class="badge"> Быстрая выдача</div>
+                    <div class="badge">⚡ Быстрая выдача</div>
                     <div class="badge">💬 Поддержка 24/7</div>
                 </div>
                 
@@ -199,7 +196,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
         if (response.ok) {
             closeAddModal();
-            await loadAccounts(true);
+            await loadAccounts();
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
@@ -219,7 +216,7 @@ async function deleteAccount(accountId, event) {
     try {
         const response = await fetch(`/api/accounts/${accountId}`, { method: 'DELETE' });
         if (response.ok) {
-            await loadAccounts(true);
+            await loadAccounts();
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
@@ -246,4 +243,5 @@ document.getElementById('searchInput').addEventListener('input', () => {
     renderAccounts(filtered);
 });
 
-loadAccounts(true);
+// Запускаем загрузку при старте
+loadAccounts();
