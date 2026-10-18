@@ -1,13 +1,16 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const ADMIN_ID = 6965294597; 
-const SELLER_USERNAME = 'ZloyXSanta'; 
+const ADMIN_ID = 6965294597;
+const SELLER_USERNAME = 'ZloyXSanta';
 
 const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
 let currentAccount = null;
 let currentPhotoBase64 = null;
-let allAccounts = []; 
+let allAccounts = [];
+let currentPage = 1;
+let hasMore = true;
+let isLoading = false;
 
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
@@ -26,17 +29,13 @@ function previewImage(event) {
     }
 }
 
-let currentPage = 1;
-let hasMoreAccounts = true;
-let isLoading = false;
-
 async function loadAccounts(reset = false) {
     if (isLoading) return;
     isLoading = true;
 
     if (reset) {
         currentPage = 1;
-        hasMoreAccounts = true;
+        hasMore = true;
         allAccounts = [];
     }
     
@@ -50,10 +49,8 @@ async function loadAccounts(reset = false) {
             allAccounts = [...allAccounts, ...data.accounts];
         }
         
-        hasMoreAccounts = data.hasMore;
-        applySearch();
-        
-        // Управляем кнопкой "Показать ещё"
+        hasMore = data.hasMore;
+        renderAccounts(allAccounts);
         updateLoadMoreButton();
         
         currentPage++;
@@ -67,33 +64,18 @@ async function loadAccounts(reset = false) {
 function updateLoadMoreButton() {
     let btn = document.getElementById('loadMoreBtn');
     
-    // Если аккаунты ещё есть и кнопки нет - создаем её
-    if (hasMoreAccounts && !btn) {
+    if (hasMore && !btn) {
         btn = document.createElement('button');
         btn.id = 'loadMoreBtn';
         btn.className = 'btn-load-more';
-        btn.textContent = 'Показать ещё аккаунты ↓';
+        btn.textContent = 'Показать ещё ↓';
         btn.onclick = () => loadAccounts(false);
         
         const list = document.getElementById('accountsList');
         list.parentNode.insertBefore(btn, list.nextSibling);
-    } 
-    // Если аккаунтов больше нет, а кнопка есть - удаляем её
-    else if (!hasMoreAccounts && btn) {
+    } else if (!hasMore && btn) {
         btn.remove();
     }
-}
-function applySearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-
-    const filtered = searchTerm === '' 
-        ? allAccounts 
-        : allAccounts.filter(acc => {
-            const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
-            return text.includes(searchTerm);
-        });
-
-    renderAccounts(filtered);
 }
 
 function renderAccounts(accounts) {
@@ -109,7 +91,6 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    // ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: добавлены кавычки и _id вместо id
     list.innerHTML = accounts.map((account, index) => `
         <div class="account-card" onclick="openBuyModal('${account._id}')">
             ${index === 0 ? `
@@ -123,21 +104,21 @@ function renderAccounts(accounts) {
             ${isAdmin ? `<button class="delete-btn" onclick="deleteAccount('${account._id}', event)">УДАЛИТЬ</button>` : ''}
             
             ${account.photo 
-                ? `<img src="${account.photo}" class="account-photo" alt="${account.name}">`
+                ? `<img src="${account.photo}" class="account-photo" alt="${account.name}" loading="lazy">`
                 : `<div class="account-photo-placeholder">🎮</div>`
             }
             
             <div class="account-body">
                 <div class="account-stats">
                     <div class="stat-item">
-                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-icon">️</div>
                         <div class="stat-info">
                             <div class="stat-label">Герои</div>
                             <div class="stat-value">${account.heroes}</div>
                         </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-icon">🎨</div>
+                        <div class="stat-icon"></div>
                         <div class="stat-info">
                             <div class="stat-label">Скины</div>
                             <div class="stat-value">${account.skins}</div>
@@ -151,34 +132,14 @@ function renderAccounts(accounts) {
                 <div class="account-description">${account.description || account.name}</div>
                 
                 <div class="account-badges">
-                    <div class="badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        </svg>
-                        Безопасная сделка
-                    </div>
-                    <div class="badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                        </svg>
-                        Быстрая выдача
-                    </div>
-                    <div class="badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                        </svg>
-                        Поддержка 24/7
-                    </div>
+                    <div class="badge">🛡️ Безопасная сделка</div>
+                    <div class="badge"> Быстрая выдача</div>
+                    <div class="badge">💬 Поддержка 24/7</div>
                 </div>
                 
                 <div class="account-footer">
                     <div class="account-price">${account.price.toLocaleString()} ₽</div>
-                    <button class="btn-details">
-                        Подробнее
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </button>
+                    <button class="btn-details">Подробнее ›</button>
                 </div>
             </div>
         </div>
@@ -197,7 +158,6 @@ function closeAddModal() {
     currentPhotoBase64 = null;
 }
 
-// ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: сравнение через String(acc._id)
 function openBuyModal(accountId) {
     const account = allAccounts.find(acc => String(acc._id) === String(accountId));
     if (account) {
@@ -237,14 +197,13 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn ? submitBtn.textContent : 'Добавить';
     if (submitBtn) {
-        submitBtn.textContent = 'Загрузка фото...';
+        submitBtn.textContent = 'Загрузка...';
         submitBtn.disabled = true;
     }
 
     try {
         let photoUrl = null;
 
-        // Сначала загружаем фото в Cloudinary
         if (currentPhotoBase64) {
             const uploadResponse = await fetch('/api/upload-photo', {
                 method: 'POST',
@@ -258,10 +217,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
             }
             
             photoUrl = uploadData.url;
-            console.log('Фото загружено:', photoUrl);
         }
 
-        // Создаём аккаунт со ссылкой на фото
         const account = {
             name: document.getElementById('description').value,
             rank: document.getElementById('rank').value,
@@ -280,11 +237,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
         if (response.ok) {
             closeAddModal();
-            await loadAccounts();
+            await loadAccounts(true);
             tg.HapticFeedback?.notificationOccurred('success');
-        } else {
-            const err = await response.json();
-            console.error('Ошибка создания аккаунта:', err);
         }
     } catch (error) {
         console.error('Ошибка добавления:', error);
@@ -295,7 +249,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
         }
     }
 });
-// ⚠️ ИСПРАВЛЕНИЕ ЗДЕСЬ: параметр теперь называется accountId
+
 async function deleteAccount(accountId, event) {
     event.stopPropagation();
     if (!confirm('Удалить этот аккаунт?')) return;
@@ -303,7 +257,7 @@ async function deleteAccount(accountId, event) {
     try {
         const response = await fetch(`/api/accounts/${accountId}`, { method: 'DELETE' });
         if (response.ok) {
-            await loadAccounts(); 
+            await loadAccounts(true);
             tg.HapticFeedback?.notificationOccurred('success');
         }
     } catch (error) {
@@ -320,7 +274,14 @@ document.getElementById('buyModal').addEventListener('click', (e) => {
 });
 
 document.getElementById('searchInput').addEventListener('input', () => {
-    applySearch();
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const filtered = searchTerm === '' 
+        ? allAccounts 
+        : allAccounts.filter(acc => {
+            const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
+            return text.includes(searchTerm);
+        });
+    renderAccounts(filtered);
 });
 
-loadAccounts();
+loadAccounts(true);
