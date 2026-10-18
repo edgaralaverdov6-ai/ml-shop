@@ -102,28 +102,13 @@ app.get('/migrate-photos', async (req, res) => {
 
 app.get('/api/accounts', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
-    
-    const accounts = await Account.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    const total = await Account.countDocuments();
-    
-    res.json({ 
-      accounts, 
-      hasMore: skip + accounts.length < total,
-      total 
-    });
+    const accounts = await Account.find().sort({ createdAt: -1 });
+    res.json(accounts);
   } catch (error) {
     console.error('Ошибка:', error);
     res.status(500).json({ error: error.message });
   }
 });
-
 app.post('/api/upload-photo', async (req, res) => {
   try {
     const { photo } = req.body;
