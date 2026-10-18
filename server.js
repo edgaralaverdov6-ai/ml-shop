@@ -3,6 +3,7 @@ const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,14 @@ app.use(express.static('public'));
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
+// Настройка Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB подключена'))
   .catch(err => console.error('❌ Ошибка MongoDB:', err));
@@ -45,33 +54,46 @@ const User = mongoose.model('User', userSchema);
 
 // ================= API РОУТЫ =================
 
-// ✅ Теперь сортировка идёт через MongoDB (с индексом — мгновенно!)
 app.get('/api/accounts', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5; // Загружаем только по 5 аккаунтов за раз
-    const skip = (page - 1) * limit;
-    
-    // Сортируем и берем только нужное количество
-    const accounts = await Account.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    // Проверяем, есть ли ещё аккаунты
-    const total = await Account.countDocuments();
-    const hasMore = skip + accounts.length < total;
-
-    res.json({ accounts, hasMore });
+    const accounts = await Account.find().sort({ createdAt: -1 });
+    res.json(accounts);
   } catch (error) {
     console.error('Ошибка получения аккаунтов:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// Загрузка фото в Cloudinary
+app.post('/api/upload-photo', async (req, res) => {
+  try {
+    const { photo } = req.body;
+    
+    if (!photo) {
+      return res.status(400).json({ error: 'Нет фото' });
+    }
+
+    const result = await cloudinary.uploader.upload(photo, {
+      folder: 'mlbb-accounts',
+      quality: 'auto:good',
+      format: 'auto',
+      width: 800,
+      crop: 'limit'
+    });
+
+    res.json({ url: result.secure_url });
+  } catch (error) {
+    console.error('Ошибка загрузки фото:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/accounts', async (req, res) => {
   try {
-    const account = new Account({ ...req.body, createdAt: new Date() });
+    const account = new Account({ 
+      ...req.body, 
+      createdAt: new Date() 
+    });
     await account.save();
     res.json(account);
   } catch (error) {
@@ -108,17 +130,17 @@ bot.onText(/\/start/, async (msg) => {
   }
 
   const notification = `
-🔔 <b>Новый пользователь нажал /start!</b>
+ <b>Новый пользователь нажал /start!</b>
 
 👤 <b>Имя:</b> ${fullName}
 🆔 <b>Username:</b> @${username}
-🔢 <b>ID:</b> <code>${userId}</code>
+ <b>ID:</b> <code>${userId}</code>
 📅 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
   `;
 
   bot.sendMessage(ADMIN_ID, notification, { parse_mode: 'HTML' });
 
-  bot.sendMessage(msg.chat.id, ' Добро пожаловать в магазин аккаунтов Mobile Legends!', {
+  bot.sendMessage(msg.chat.id, '🎮 Добро пожаловать в магазин аккаунтов Mobile Legends!', {
     reply_markup: {
       inline_keyboard: [
         [{ text: '🛒 Открыть магазин', web_app: { url: 'https://ml-shop.onrender.com' } }]
