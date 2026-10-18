@@ -75,8 +75,7 @@ app.post('/api/upload-photo', async (req, res) => {
 
     const result = await cloudinary.uploader.upload(photo, {
       folder: 'mlbb-accounts',
-      quality: 'auto:good',
-      format: 'auto',
+      quality: 80,
       width: 800,
       crop: 'limit'
     });
@@ -87,7 +86,6 @@ app.post('/api/upload-photo', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 app.post('/api/accounts', async (req, res) => {
   try {
     const account = new Account({ 
