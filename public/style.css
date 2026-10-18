@@ -611,3 +611,23 @@ body::before {
     .account-photo, .account-photo-placeholder { height: 220px; }
     .account-price { font-size: 1.5em; }
 }
+.btn-load-more {
+    width: 100%;
+    padding: 16px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(109, 40, 217, 0.2) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+.btn-load-more:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.4) 100%);
+}
