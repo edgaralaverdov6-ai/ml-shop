@@ -9,6 +9,9 @@ let currentAccount = null;
 let currentPhotoBase64 = null;
 let allAccounts = [];
 
+// Переменная для состояния сортировки: 'none', 'asc' (возрастание), 'desc' (убывание)
+let sortDirection = 'none';
+
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 }
@@ -31,9 +34,63 @@ async function loadAccounts() {
         const response = await fetch('/api/accounts');
         const accounts = await response.json();
         allAccounts = accounts;
+        
+        // Сбрасываем сортировку при новой загрузке данных
+        sortDirection = 'none';
+        updateSortButton();
+        
         renderAccounts(accounts);
     } catch (error) {
         console.error('Ошибка загрузки:', error);
+    }
+}
+
+// Функция переключения сортировки
+function toggleSort() {
+    if (sortDirection === 'none') {
+        sortDirection = 'asc';
+    } else if (sortDirection === 'asc') {
+        sortDirection = 'desc';
+    } else {
+        sortDirection = 'none';
+    }
+    
+    updateSortButton();
+    
+    // Перерисовываем список с учётом текущего поиска и новой сортировки
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const filtered = searchTerm === '' 
+        ? allAccounts 
+        : allAccounts.filter(acc => {
+            const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
+            return text.includes(searchTerm);
+        });
+        
+    renderAccounts(filtered);
+}
+
+// Функция обновления внешнего вида кнопки сортировки
+function updateSortButton() {
+    const btn = document.getElementById('sortBtn');
+    if (!btn) return; // Защита, если кнопки ещё нет в DOM
+    
+    const text = document.getElementById('sortText');
+    const icon = document.getElementById('sortIcon');
+
+    // Сбрасываем классы
+    btn.className = 'sort-btn';
+
+    if (sortDirection === 'asc') {
+        btn.classList.add('active-asc');
+        text.textContent = 'Сначала дешёвые';
+        icon.textContent = '↑';
+    } else if (sortDirection === 'desc') {
+        btn.classList.add('active-desc');
+        text.textContent = 'Сначала дорогие';
+        icon.textContent = '↓';
+    } else {
+        text.textContent = 'Сортировка по цене';
+        icon.textContent = '⇅';
     }
 }
 
@@ -50,7 +107,17 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    list.innerHTML = accounts.map((account, index) => `
+    // Создаем копию массива, чтобы не ломать исходный порядок allAccounts
+    let displayAccounts = [...accounts];
+
+    // Применяем сортировку по цене, если она включена
+    if (sortDirection === 'asc') {
+        displayAccounts.sort((a, b) => a.price - b.price);
+    } else if (sortDirection === 'desc') {
+        displayAccounts.sort((a, b) => b.price - a.price);
+    }
+
+    list.innerHTML = displayAccounts.map((account, index) => `
         <div class="account-card" onclick="openBuyModal('${account._id}')">
             ${index === 0 ? `
                 <div class="top-badge">
