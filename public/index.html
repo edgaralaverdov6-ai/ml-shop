@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MLBB Accounts</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -48,11 +48,18 @@
                 Фильтры
             </button>
         </div>
-<!-- Кнопка сортировки -->
-<button id="sortBtn" class="sort-btn" onclick="toggleSort()">
-    <span id="sortText">Сортировка по цене</span>
-    <span id="sortIcon">⇅</span>
-</button>
+
+        <!-- Кнопка сортировки -->
+        <button id="sortBtn" class="sort-btn" onclick="toggleSort()">
+            <span id="sortText">Сортировка по цене</span>
+            <span id="sortIcon">⇅</span>
+        </button>
+
+        <!-- КНОПКА ИНДИВИДУАЛЬНОГО ЗАКАЗА -->
+        <button class="btn-custom-order" onclick="openCustomOrderModal()">
+            🛠️ Индивидуальный заказ аккаунта
+        </button>
+
         <!-- Кнопка админа -->
         <div class="admin-panel" id="adminPanel" style="display: none;">
             <button class="btn-add" onclick="openAddModal()">+ Добавить аккаунт</button>
@@ -117,6 +124,46 @@
                 <button class="btn-cancel" onclick="closeBuyModal()">Закрыть</button>
                 <button class="btn-submit" onclick="contactSeller()">Связаться</button>
             </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ИНДИВИДУАЛЬНОГО ЗАКАЗА -->
+    <div id="customOrderModal" class="modal">
+        <div class="modal-content custom-modal-content">
+            <span class="close-modal" onclick="closeCustomOrderModal()" style="float: right; font-size: 28px; cursor: pointer; color: rgba(255,255,255,0.5);">&times;</span>
+            <h2 class="modal-title" style="margin-top: 0; margin-bottom: 20px;">🛠️ Индивидуальный заказ</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Тип аккаунта:</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="accType" value="Пустышка" checked>
+                        <span class="radio-custom">Пустышка</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="accType" value="Жирный">
+                        <span class="radio-custom">Жирный</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="customStars">Количество звезд в максимальном ранге:</label>
+                <input type="number" id="customStars" class="form-input" placeholder="Например: 50" min="0">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Желаемые скины:</label>
+                <div id="skinsContainer">
+                    <div class="skin-input-row">
+                        <input type="text" class="form-input skin-input" placeholder="Название скина (например: Колл)">
+                        <button type="button" class="remove-skin-btn" onclick="removeSkinField(this)">✕</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add-skin" onclick="addSkinField()">+ Добавить еще скин</button>
+            </div>
+
+            <button class="btn-submit-order" onclick="submitCustomOrder()">📩 Отправить заявку продавцу</button>
         </div>
     </div>
 
