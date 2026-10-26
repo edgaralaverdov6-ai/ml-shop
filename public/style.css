@@ -611,6 +611,8 @@ body::before {
     .account-photo, .account-photo-placeholder { height: 220px; }
     .account-price { font-size: 1.5em; }
 }
+
+/* Кнопка загрузки еще (если вдруг понадобится) */
 .btn-load-more {
     width: 100%;
     padding: 16px;
@@ -631,6 +633,7 @@ body::before {
     transform: scale(0.98);
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.4) 100%);
 }
+
 /* Кнопка сортировки */
 .sort-btn {
     width: 100%;
@@ -659,34 +662,69 @@ body::before {
     transform: scale(0.98);
 }
 
-/* Состояние: по возрастанию (дешевые сначала) */
 .sort-btn.active-asc {
     background: rgba(74, 222, 128, 0.15);
     border-color: rgba(74, 222, 128, 0.5);
     color: #4ade80;
 }
 
-/* Состояние: по убыванию (дорогие сначала) */
 .sort-btn.active-desc {
     background: rgba(248, 113, 113, 0.15);
     border-color: rgba(248, 113, 113, 0.5);
     color: #f87171;
 }
-/* Кнопка вызова на главной */
+
+/* ========================================== */
+/* КНОПКА ИНДИВИДУАЛЬНОГО ЗАКАЗА - ПРЕМИУМ    */
+/* ========================================== */
 .btn-custom-order {
     width: 100%;
-    padding: 14px;
+    padding: 16px 20px;
     margin-bottom: 20px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border: none;
-    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(109, 40, 217, 0.25) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.6);
+    border-radius: 14px;
     color: #fff;
     font-weight: 700;
-    font-size: 1em;
+    font-size: 1.05em;
     cursor: pointer;
-    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
-.btn-custom-order:active { transform: scale(0.98); }
+
+/* Блик сверху для эффекта стекла */
+.btn-custom-order::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+    border-radius: 14px 14px 0 0;
+    pointer-events: none;
+}
+
+.btn-custom-order:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.4) 100%);
+    border-color: rgba(139, 92, 246, 0.9);
+    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.5), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-custom-order:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 15px rgba(139, 92, 246, 0.4);
+}
 
 /* Стили модального окна заказа */
 .custom-modal-content {
@@ -695,7 +733,6 @@ body::before {
     padding: 24px;
 }
 
-.form-group { margin-bottom: 20px; }
 .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: rgba(255,255,255,0.8); font-size: 0.9em; }
 .form-input {
     width: 100%;
