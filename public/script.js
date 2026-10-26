@@ -356,6 +356,8 @@ function submitCustomOrder() {
     // 1. Собираем данные
     const accType = document.querySelector('input[name="accType"]:checked').value;
     const stars = document.getElementById('customStars').value || 'Не указано';
+    const winRate = document.getElementById('customWinRate').value || 'Не указано';
+    const description = document.getElementById('customDescription').value.trim() || 'Не указано';
     
     // Собираем все непустые названия скинов
     const skinInputs = document.querySelectorAll('.skin-input');
@@ -373,6 +375,8 @@ function submitCustomOrder() {
 
 👤 *Тип аккаунта:* ${accType}
 ⭐ *Звезд в максе:* ${stars}
+📊 *Процент побед:* ${winRate}%
+📝 *Описание:* ${description}
 🎨 *Желаемые скины:* ${skinsText}
 
 Жду ответа по стоимости и срокам!`;
@@ -384,10 +388,3 @@ function submitCustomOrder() {
     closeCustomOrderModal();
     tg.HapticFeedback?.notificationOccurred('success');
 }
-
-// Закрытие модалки при клике вне её области
-document.getElementById('customOrderModal').addEventListener('click', (e) => {
-    if (e.target.id === 'customOrderModal') {
-        closeCustomOrderModal();
-    }
-});
