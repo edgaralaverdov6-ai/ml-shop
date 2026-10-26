@@ -312,3 +312,82 @@ document.getElementById('searchInput').addEventListener('input', () => {
 
 // Запускаем загрузку при старте
 loadAccounts();
+// ================= ИНДИВИДУАЛЬНЫЙ ЗАКАЗ =================
+
+function openCustomOrderModal() {
+    document.getElementById('customOrderModal').classList.add('active');
+}
+
+function closeCustomOrderModal() {
+    document.getElementById('customOrderModal').classList.remove('active');
+    // Сброс формы при закрытии
+    document.getElementById('customStars').value = '';
+    document.getElementById('skinsContainer').innerHTML = `
+        <div class="skin-input-row">
+            <input type="text" class="form-input skin-input" placeholder="Название скина (например: Колл)">
+            <button type="button" class="remove-skin-btn" onclick="removeSkinField(this)">✕</button>
+        </div>
+    `;
+}
+
+function addSkinField() {
+    const container = document.getElementById('skinsContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'skin-input-row';
+    newRow.innerHTML = `
+        <input type="text" class="form-input skin-input" placeholder="Название скина">
+        <button type="button" class="remove-skin-btn" onclick="removeSkinField(this)">✕</button>
+    `;
+    container.appendChild(newRow);
+}
+
+function removeSkinField(btn) {
+    const container = document.getElementById('skinsContainer');
+    // Не удаляем последнее поле, чтобы всегда было хотя бы одно
+    if (container.children.length > 1) {
+        btn.parentElement.remove();
+    } else {
+        // Если поле последнее, просто очищаем его
+        btn.previousElementSibling.value = '';
+    }
+}
+
+function submitCustomOrder() {
+    // 1. Собираем данные
+    const accType = document.querySelector('input[name="accType"]:checked').value;
+    const stars = document.getElementById('customStars').value || 'Не указано';
+    
+    // Собираем все непустые названия скинов
+    const skinInputs = document.querySelectorAll('.skin-input');
+    const skins = [];
+    skinInputs.forEach(input => {
+        if (input.value.trim() !== '') {
+            skins.push(input.value.trim());
+        }
+    });
+
+    const skinsText = skins.length > 0 ? skins.join(', ') : 'Не указаны';
+
+    // 2. Формируем красивое сообщение
+    const message = `🛠️ *НОВАЯ ЗАЯВКА НА ИНДИВИДУАЛЬНЫЙ ЗАКАЗ!*
+
+👤 *Тип аккаунта:* ${accType}
+⭐ *Звезд в максе:* ${stars}
+🎨 *Желаемые скины:* ${skinsText}
+
+Жду ответа по стоимости и срокам!`;
+
+    // 3. Отправляем тебе в Telegram
+    tg.openTelegramLink(`https://t.me/${SELLER_USERNAME}?text=${encodeURIComponent(message)}`);
+    
+    // 4. Закрываем модалку и показываем вибрацию
+    closeCustomOrderModal();
+    tg.HapticFeedback?.notificationOccurred('success');
+}
+
+// Закрытие модалки при клике вне её области
+document.getElementById('customOrderModal').addEventListener('click', (e) => {
+    if (e.target.id === 'customOrderModal') {
+        closeCustomOrderModal();
+    }
+});
