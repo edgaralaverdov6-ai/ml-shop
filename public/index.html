@@ -350,6 +350,76 @@
         </div>
     </div>
 
+    <!-- МОДАЛКА РЕДАКТИРОВАНИЯ АККАУНТА -->
+    <div class="modal" id="editAccountModal">
+        <div class="modal-content">
+            <h2>✏️ Редактировать аккаунт</h2>
+            <form id="editAccountForm">
+                <input type="hidden" id="editAccountId">
+                <div class="form-group">
+                    <label>📸 Скриншот аккаунта (оставьте пустым, чтобы не менять)</label>
+                    <input type="file" id="editPhoto" accept="image/*" onchange="previewEditImage(event)">
+                    <div class="photo-preview" id="editPhotoPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Название / Описание</label>
+                    <textarea id="editDescription" placeholder="17 КОЛЛ ✨ ФУЛЛ ЖЖК 🏠 3 ЛЕГИ..." required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ранг</label>
+                        <input type="text" id="editRank" required placeholder="Мифический">
+                    </div>
+                    <div class="form-group">
+                        <label>Цена (₽)</label>
+                        <input type="number" id="editPrice" required placeholder="25000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Герои</label>
+                        <input type="number" id="editHeroes" required placeholder="133">
+                    </div>
+                    <div class="form-group">
+                        <label>Скины</label>
+                        <input type="number" id="editSkins" required placeholder="500">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditAccountModal()">Отмена</button>
+                    <button type="submit" class="btn-submit">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА РЕДАКТИРОВАНИЯ УСЛУГИ -->
+    <div class="modal" id="editServiceModal">
+        <div class="modal-content">
+            <h2>✏️ Редактировать услугу</h2>
+            <form id="editServiceForm">
+                <input type="hidden" id="editServiceId">
+                <div class="form-group">
+                    <label>📸 Фото услуги (оставьте пустым, чтобы не менять)</label>
+                    <input type="file" id="editServicePhoto" accept="image/*" onchange="previewEditServiceImage(event)">
+                    <div class="photo-preview" id="editServicePhotoPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Описание услуги</label>
+                    <textarea id="editServiceDescription" placeholder="Например: Прокачка ранга до Мифика за 3 дня..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <input type="number" id="editServicePrice" required placeholder="1500">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditServiceModal()">Отмена</button>
+                    <button type="submit" class="btn-submit">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
