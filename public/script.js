@@ -30,13 +30,18 @@ function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
     
+    // Скрываем все разделы
     document.getElementById('saleSection').style.display = 'none';
     document.getElementById('servicesSection').style.display = 'none';
+    document.getElementById('faqSection').style.display = 'none';
     
+    // Показываем нужный
     if (tab === 'sale') {
         document.getElementById('saleSection').style.display = 'block';
     } else if (tab === 'services') {
         document.getElementById('servicesSection').style.display = 'block';
+    } else if (tab === 'faq') {
+        document.getElementById('faqSection').style.display = 'block';
     }
 }
 
@@ -541,6 +546,36 @@ function submitCustomOrder() {
 document.getElementById('customOrderModal').addEventListener('click', (e) => {
     if (e.target.id === 'customOrderModal') closeCustomOrderModal();
 });
+
+
+// ================= FAQ (ЧАСТЫЕ ВОПРОСЫ) =================
+
+function toggleFaq(button) {
+    const faqItem = button.parentElement;
+    const answer = faqItem.querySelector('.faq-answer');
+    const icon = button.querySelector('.faq-icon');
+    
+    // Закрываем все остальные открытые вопросы
+    document.querySelectorAll('.faq-item').forEach(item => {
+        if (item !== faqItem) {
+            item.classList.remove('active');
+            item.querySelector('.faq-answer').style.maxHeight = null;
+            item.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
+        }
+    });
+    
+    // Переключаем текущий вопрос
+    faqItem.classList.toggle('active');
+    
+    if (faqItem.classList.contains('active')) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        answer.style.maxHeight = null;
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
 
 // ================= ЗАПУСК ПРИ СТАРТЕ =================
 loadAccounts();
