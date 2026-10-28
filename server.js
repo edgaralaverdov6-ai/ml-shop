@@ -150,6 +150,33 @@ app.post('/api/accounts', async (req, res) => {
   }
 });
 
+// 🔥 НОВЫЙ РОУТ: ОБНОВЛЕНИЕ (РЕДАКТИРОВАНИЕ) АККАУНТА
+app.put('/api/accounts/:id', async (req, res) => {
+  try {
+    const { name, rank, heroes, skins, price, description, photo } = req.body;
+    
+    const updateData = { name, rank, heroes, skins, price, description };
+    // Обновляем фото только если пришло новое (иначе старое останется)
+    if (photo) {
+      updateData.photo = photo;
+    }
+    
+    const account = await Account.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true } // Возвращает обновленный документ
+    );
+    
+    if (!account) {
+      return res.status(404).json({ error: 'Аккаунт не найден' });
+    }
+    
+    res.json(account);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.delete('/api/accounts/:id', async (req, res) => {
   try {
     await Account.findByIdAndDelete(req.params.id);
@@ -200,6 +227,32 @@ app.post('/api/services', async (req, res) => {
   }
 });
 
+// 🔥 НОВЫЙ РОУТ: ОБНОВЛЕНИЕ (РЕДАКТИРОВАНИЕ) УСЛУГИ
+app.put('/api/services/:id', async (req, res) => {
+  try {
+    const { description, price, photo } = req.body;
+    
+    const updateData = { description, price };
+    if (photo) {
+      updateData.photo = photo;
+    }
+    
+    const service = await Service.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    
+    if (!service) {
+      return res.status(404).json({ error: 'Услуга не найдена' });
+    }
+    
+    res.json(service);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.delete('/api/services/:id', async (req, res) => {
   try {
     await Service.findByIdAndDelete(req.params.id);
@@ -229,11 +282,11 @@ bot.onText(/\/start/, async (msg) => {
   }
 
   const notification = `
- <b>Новый пользователь!</b>
+🔔 <b>Новый пользователь!</b>
 👤 <b>Имя:</b> ${fullName}
 🆔 <b>Username:</b> @${username}
 🔢 <b>ID:</b> <code>${userId}</code>
- <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
+📅 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
   `;
 
   bot.sendMessage(ADMIN_ID, notification, { parse_mode: 'HTML' });
