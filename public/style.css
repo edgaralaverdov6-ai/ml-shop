@@ -812,3 +812,46 @@ body::before {
     cursor: pointer;
 }
 .btn-submit-order:active { transform: scale(0.98); }
+/* ================= КНОПКА ДОБАВЛЕНИЯ УСЛУГИ ================= */
+.btn-add-service {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    transition: all 0.3s;
+}
+
+.btn-add-service:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6);
+}
+
+/* ================= СТИЛИ ДЛЯ УСЛУГ ================= */
+.service-card {
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.service-card:hover {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+}
+
+.service-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5) !important;
+}
+
+.service-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.service-btn:hover {
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6) !important;
+}
