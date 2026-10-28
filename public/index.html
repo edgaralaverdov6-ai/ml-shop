@@ -32,10 +32,11 @@
             </div>
         </header>
 
-        <!-- ТАБЫ: ПРОДАЖА / УСЛУГИ -->
+        <!-- ТАБЫ: ПРОДАЖА / УСЛУГИ / FAQ -->
         <div class="tabs">
             <button class="tab active" data-tab="sale" onclick="switchTab('sale')">🛒 Продажа</button>
             <button class="tab" data-tab="services" onclick="switchTab('services')">🎯 Услуги</button>
+            <button class="tab" data-tab="faq" onclick="switchTab('faq')">❓ FAQ</button>
         </div>
 
         <!-- РАЗДЕЛ ПРОДАЖИ -->
@@ -104,7 +105,110 @@
                 <p>Пока нет услуг</p>
             </div>
         </div>
-    </div>
+
+        <!-- РАЗДЕЛ FAQ -->
+        <div id="faqSection" style="display: none;">
+            <div class="faq-header">
+                <h2 class="faq-title">🎅 Частые вопросы</h2>
+                <p class="faq-subtitle">Всё, что нужно знать перед покупкой</p>
+            </div>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>🔒 Откуда берутся аккаунты?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Все аккаунты — как новогодние подарки под ёлкой! 🎁</p>
+                        <ul>
+                            <li>Куплены у проверенного личного поставщика ❄️</li>
+                            <li>Хранятся только у меня — как секретный рецепт эльфийского печенья! 🧝‍♂️</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>📧 Что идёт в комплекте с аккаунтом?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Аккаунт идёт в комплекте со <strong>свежесозданной почтой</strong>! 📧</p>
+                        <p>После 30-дневной защиты (как новогоднее волшебство, которое не исчезает сразу) вы сможете привязать его к своей почте! 🎁</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>🛡️ Есть ли гарантия?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p><strong>Гарантия от Санты лично!</strong> 🎅</p>
+                        <p>На весь период защиты я несу полную ответственность за аккаунт. Если что — я тут, как Рудольф с фонариком! 🦌💡</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>👨‍💼 Какие бонусы после покупки?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p><strong>Бонус от Деда Мороза!</strong> 🎄</p>
+                        <p>После покупки вы получаете <strong>личного консультанта</strong> по всем вопросам Mobile Legends — <strong>навсегда</strong>! 💬</p>
+                        <p>(Да-да, даже после Нового Года и Рождества! 😎)</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>🤝 Есть ли реферальная программа?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p><strong>Да! За каждого привлечённого вами покупателя вы получаете:</strong></p>
+                        <div class="referral-options">
+                            <div class="referral-option">
+                                <span class="referral-emoji">🎟️</span>
+                                <span class="referral-text">Скидку <strong>10%</strong> на покупку нового аккаунта</span>
+                            </div>
+                            <div class="referral-divider">ИЛИ</div>
+                            <div class="referral-option">
+                                <span class="referral-emoji">💎</span>
+                                <span class="referral-text"><strong>165 алмазов</strong> на любой аккаунт по вашему выбору</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                        <span>🎅 Кто такой ZloyXSanta?</span>
+                        <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Меня зовут <strong>ZloyXSanta</strong> — ваш самый надёжный Дед Мороз по аккаунтам Mobile Legends: Bang Bang! 😍🎁</p>
+                        <p>🔥 Не упустите шанс усилить свой путь в MLBB — пока снег не растаял и подарки ещё не разошлись! ❄️✨</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- Конец div class="app" -->
 
     <!-- Модалка добавления аккаунта -->
     <div class="modal" id="addModal">
