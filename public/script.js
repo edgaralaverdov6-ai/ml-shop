@@ -18,6 +18,10 @@ let currentServicePhotoBase64 = null;
 let allServices = [];
 let currentTab = 'sale';
 
+// Переменные для редактирования
+let editPhotoBase64 = null;
+let editServicePhotoBase64 = null;
+
 // Показываем админ-панели, если это админ
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
@@ -30,12 +34,10 @@ function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
     
-    // Скрываем все разделы
     document.getElementById('saleSection').style.display = 'none';
     document.getElementById('servicesSection').style.display = 'none';
     document.getElementById('faqSection').style.display = 'none';
     
-    // Показываем нужный
     if (tab === 'sale') {
         document.getElementById('saleSection').style.display = 'block';
     } else if (tab === 'services') {
@@ -53,8 +55,7 @@ function previewImage(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             currentPhotoBase64 = e.target.result;
-            document.getElementById('photoPreview').innerHTML = 
-                `<img src="${currentPhotoBase64}" alt="Preview">`;
+            document.getElementById('photoPreview').innerHTML = `<img src="${currentPhotoBase64}" alt="Preview">`;
         };
         reader.readAsDataURL(file);
     }
@@ -137,7 +138,10 @@ function renderAccounts(accounts) {
                     ТОП АККАУНТ
                 </div>
             ` : ''}
-            ${isAdmin ? `<button class="delete-btn" onclick="deleteAccount('${account._id}', event)">УДАЛИТЬ</button>` : ''}
+            ${isAdmin ? `
+                <button class="edit-btn" onclick="openEditAccountModal('${account._id}', event)">✏️</button>
+                <button class="delete-btn" onclick="deleteAccount('${account._id}', event)">УДАЛИТЬ</button>
+            ` : ''}
             
             ${account.photo 
                 ? `<img src="${account.photo}" class="account-photo" alt="${account.name}" loading="lazy">`
@@ -307,8 +311,7 @@ function previewServiceImage(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             currentServicePhotoBase64 = e.target.result;
-            document.getElementById('servicePhotoPreview').innerHTML = 
-                `<img src="${currentServicePhotoBase64}" alt="Preview">`;
+            document.getElementById('servicePhotoPreview').innerHTML = `<img src="${currentServicePhotoBase64}" alt="Preview">`;
         };
         reader.readAsDataURL(file);
     }
@@ -348,7 +351,10 @@ function renderServices(services) {
                     ТОП УСЛУГА
                 </div>
             ` : ''}
-            ${isAdmin ? `<button class="delete-btn" onclick="deleteService('${service._id}', event)">УДАЛИТЬ</button>` : ''}
+            ${isAdmin ? `
+                <button class="edit-btn" onclick="openEditServiceModal('${service._id}', event)">✏️</button>
+                <button class="delete-btn" onclick="deleteService('${service._id}', event)">УДАЛИТЬ</button>
+            ` : ''}
             
             ${service.photo 
                 ? `<img src="${service.photo}" class="account-photo" alt="Услуга" loading="lazy">`
@@ -476,6 +482,185 @@ document.getElementById('servicesSearchInput').addEventListener('input', () => {
 });
 
 
+// ================= РЕДАКТИРОВАНИЕ АККАУНТОВ =================
+
+function previewEditImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            editPhotoBase64 = e.target.result;
+            document.getElementById('editPhotoPreview').innerHTML = `<img src="${editPhotoBase64}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function openEditAccountModal(accountId, event) {
+    event.stopPropagation(); // Чтобы не открывалась модалка покупки
+    const account = allAccounts.find(acc => String(acc._id) === String(accountId));
+    if (account) {
+        editPhotoBase64 = null;
+        document.getElementById('editAccountId').value = account._id;
+        document.getElementById('editDescription').value = account.description || '';
+        document.getElementById('editRank').value = account.rank || '';
+        document.getElementById('editPrice').value = account.price || '';
+        document.getElementById('editHeroes').value = account.heroes || '';
+        document.getElementById('editSkins').value = account.skins || '';
+        
+        if (account.photo) {
+            document.getElementById('editPhotoPreview').innerHTML = `<img src="${account.photo}" alt="Current photo">`;
+        } else {
+            document.getElementById('editPhotoPreview').innerHTML = '';
+        }
+        
+        document.getElementById('editAccountModal').classList.add('active');
+    }
+}
+
+function closeEditAccountModal() {
+    document.getElementById('editAccountModal').classList.remove('active');
+    document.getElementById('editAccountForm').reset();
+    document.getElementById('editPhotoPreview').innerHTML = '';
+    editPhotoBase64 = null;
+}
+
+document.getElementById('editAccountForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : 'Сохранить';
+    if (submitBtn) { submitBtn.textContent = 'Сохранение...'; submitBtn.disabled = true; }
+
+    try {
+        const accountId = document.getElementById('editAccountId').value;
+        let photoUrl = null;
+        
+        if (editPhotoBase64) {
+            const uploadResponse = await fetch('/api/upload-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: editPhotoBase64 })
+            });
+            const uploadData = await uploadResponse.json();
+            if (!uploadResponse.ok) throw new Error(uploadData.error || 'Ошибка загрузки фото');
+            photoUrl = uploadData.url;
+        }
+
+        const account = {
+            name: document.getElementById('editDescription').value,
+            rank: document.getElementById('editRank').value,
+            heroes: parseInt(document.getElementById('editHeroes').value),
+            skins: parseInt(document.getElementById('editSkins').value),
+            price: parseInt(document.getElementById('editPrice').value),
+            description: document.getElementById('editDescription').value,
+            photo: photoUrl // Если null, сервер оставит старое фото
+        };
+
+        const response = await fetch(`/api/accounts/${accountId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(account)
+        });
+
+        if (response.ok) {
+            closeEditAccountModal();
+            await loadAccounts();
+            tg.HapticFeedback?.notificationOccurred('success');
+        }
+    } catch (error) {
+        console.error('Ошибка редактирования:', error);
+    } finally {
+        if (submitBtn) { submitBtn.textContent = originalText; submitBtn.disabled = false; }
+    }
+});
+
+
+// ================= РЕДАКТИРОВАНИЕ УСЛУГ =================
+
+function previewEditServiceImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            editServicePhotoBase64 = e.target.result;
+            document.getElementById('editServicePhotoPreview').innerHTML = `<img src="${editServicePhotoBase64}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function openEditServiceModal(serviceId, event) {
+    event.stopPropagation();
+    const service = allServices.find(s => String(s._id) === String(serviceId));
+    if (service) {
+        editServicePhotoBase64 = null;
+        document.getElementById('editServiceId').value = service._id;
+        document.getElementById('editServiceDescription').value = service.description || '';
+        document.getElementById('editServicePrice').value = service.price || '';
+        
+        if (service.photo) {
+            document.getElementById('editServicePhotoPreview').innerHTML = `<img src="${service.photo}" alt="Current photo">`;
+        } else {
+            document.getElementById('editServicePhotoPreview').innerHTML = '';
+        }
+        
+        document.getElementById('editServiceModal').classList.add('active');
+    }
+}
+
+function closeEditServiceModal() {
+    document.getElementById('editServiceModal').classList.remove('active');
+    document.getElementById('editServiceForm').reset();
+    document.getElementById('editServicePhotoPreview').innerHTML = '';
+    editServicePhotoBase64 = null;
+}
+
+document.getElementById('editServiceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : 'Сохранить';
+    if (submitBtn) { submitBtn.textContent = 'Сохранение...'; submitBtn.disabled = true; }
+
+    try {
+        const serviceId = document.getElementById('editServiceId').value;
+        let photoUrl = null;
+        
+        if (editServicePhotoBase64) {
+            const uploadResponse = await fetch('/api/upload-service-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: editServicePhotoBase64 })
+            });
+            const uploadData = await uploadResponse.json();
+            if (!uploadResponse.ok) throw new Error(uploadData.error || 'Ошибка загрузки фото');
+            photoUrl = uploadData.url;
+        }
+
+        const service = {
+            description: document.getElementById('editServiceDescription').value,
+            price: parseInt(document.getElementById('editServicePrice').value),
+            photo: photoUrl
+        };
+
+        const response = await fetch(`/api/services/${serviceId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(service)
+        });
+
+        if (response.ok) {
+            closeEditServiceModal();
+            await loadServices();
+            tg.HapticFeedback?.notificationOccurred('success');
+        }
+    } catch (error) {
+        console.error('Ошибка редактирования услуги:', error);
+    } finally {
+        if (submitBtn) { submitBtn.textContent = originalText; submitBtn.disabled = false; }
+    }
+});
+
+
 // ================= ИНДИВИДУАЛЬНЫЙ ЗАКАЗ =================
 
 function openCustomOrderModal() {
@@ -555,7 +740,6 @@ function toggleFaq(button) {
     const answer = faqItem.querySelector('.faq-answer');
     const icon = button.querySelector('.faq-icon');
     
-    // Закрываем все остальные открытые вопросы
     document.querySelectorAll('.faq-item').forEach(item => {
         if (item !== faqItem) {
             item.classList.remove('active');
@@ -564,7 +748,6 @@ function toggleFaq(button) {
         }
     });
     
-    // Переключаем текущий вопрос
     faqItem.classList.toggle('active');
     
     if (faqItem.classList.contains('active')) {
@@ -575,6 +758,14 @@ function toggleFaq(button) {
         icon.style.transform = 'rotate(0deg)';
     }
 }
+
+// Закрытие модалок редактирования при клике вне их
+document.getElementById('editAccountModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editAccountModal') closeEditAccountModal();
+});
+document.getElementById('editServiceModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editServiceModal') closeEditServiceModal();
+});
 
 
 // ================= ЗАПУСК ПРИ СТАРТЕ =================
