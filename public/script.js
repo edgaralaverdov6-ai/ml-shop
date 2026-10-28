@@ -5,16 +5,42 @@ const ADMIN_ID = 6965294597;
 const SELLER_USERNAME = 'ZloyXSanta';
 
 const isAdmin = tg.initDataUnsafe?.user?.id === ADMIN_ID;
+
+// Переменные для продажи
 let currentAccount = null;
 let currentPhotoBase64 = null;
 let allAccounts = [];
-
-// Переменная для состояния сортировки: 'none', 'asc' (возрастание), 'desc' (убывание)
 let sortDirection = 'none';
 
+// Переменные для услуг
+let currentService = null;
+let currentServicePhotoBase64 = null;
+let allServices = [];
+let currentTab = 'sale';
+
+// Показываем админ-панели, если это админ
 if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('adminPanelServices').style.display = 'block';
 }
+
+// ================= УПРАВЛЕНИЕ ТАБАМИ =================
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+    
+    document.getElementById('saleSection').style.display = 'none';
+    document.getElementById('servicesSection').style.display = 'none';
+    
+    if (tab === 'sale') {
+        document.getElementById('saleSection').style.display = 'block';
+    } else if (tab === 'services') {
+        document.getElementById('servicesSection').style.display = 'block';
+    }
+}
+
+// ================= ПРОДАЖА АККАУНТОВ =================
 
 function previewImage(event) {
     const file = event.target.files[0];
@@ -34,30 +60,20 @@ async function loadAccounts() {
         const response = await fetch('/api/accounts');
         const accounts = await response.json();
         allAccounts = accounts;
-        
-        // Сбрасываем сортировку при новой загрузке данных
         sortDirection = 'none';
         updateSortButton();
-        
         renderAccounts(accounts);
     } catch (error) {
         console.error('Ошибка загрузки:', error);
     }
 }
 
-// Функция переключения сортировки
 function toggleSort() {
-    if (sortDirection === 'none') {
-        sortDirection = 'asc';
-    } else if (sortDirection === 'asc') {
-        sortDirection = 'desc';
-    } else {
-        sortDirection = 'none';
-    }
+    if (sortDirection === 'none') sortDirection = 'asc';
+    else if (sortDirection === 'asc') sortDirection = 'desc';
+    else sortDirection = 'none';
     
     updateSortButton();
-    
-    // Перерисовываем список с учётом текущего поиска и новой сортировки
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
     const filtered = searchTerm === '' 
         ? allAccounts 
@@ -65,19 +81,14 @@ function toggleSort() {
             const text = ((acc.description || '') + ' ' + (acc.name || '') + ' ' + acc.rank).toLowerCase();
             return text.includes(searchTerm);
         });
-        
     renderAccounts(filtered);
 }
 
-// Функция обновления внешнего вида кнопки сортировки
 function updateSortButton() {
     const btn = document.getElementById('sortBtn');
-    if (!btn) return; // Защита, если кнопки ещё нет в DOM
-    
+    if (!btn) return;
     const text = document.getElementById('sortText');
     const icon = document.getElementById('sortIcon');
-
-    // Сбрасываем классы
     btn.className = 'sort-btn';
 
     if (sortDirection === 'asc') {
@@ -107,15 +118,9 @@ function renderAccounts(accounts) {
     list.style.display = 'block';
     emptyState.style.display = 'none';
 
-    // Создаем копию массива, чтобы не ломать исходный порядок allAccounts
     let displayAccounts = [...accounts];
-
-    // Применяем сортировку по цене, если она включена
-    if (sortDirection === 'asc') {
-        displayAccounts.sort((a, b) => a.price - b.price);
-    } else if (sortDirection === 'desc') {
-        displayAccounts.sort((a, b) => b.price - a.price);
-    }
+    if (sortDirection === 'asc') displayAccounts.sort((a, b) => a.price - b.price);
+    else if (sortDirection === 'desc') displayAccounts.sort((a, b) => b.price - a.price);
 
     list.innerHTML = displayAccounts.map((account, index) => `
         <div class="account-card" onclick="openBuyModal('${account._id}')">
@@ -189,10 +194,7 @@ function openBuyModal(accountId) {
     if (account) {
         currentAccount = account;
         document.getElementById('buyDetails').innerHTML = `
-            ${account.photo 
-                ? `<img src="${account.photo}" class="buy-photo">`
-                : ''
-            }
+            ${account.photo ? `<img src="${account.photo}" class="buy-photo">` : ''}
             <div class="buy-title">${account.description || account.name}</div>
             <div class="buy-desc">
                 <strong>Ранг:</strong> ${account.rank}<br>
@@ -212,24 +214,19 @@ function closeBuyModal() {
 
 function contactSeller() {
     if (!currentAccount) return;
-    const message = `Привет! Хочу купить аккаунт за ${currentAccount.price} ₽`;
+    const message = `Привет! Хочу купить аккаунт за ${currentAccount.price.toLocaleString()} ₽`;
     tg.openTelegramLink(`https://t.me/${SELLER_USERNAME}?text=${encodeURIComponent(message)}`);
     closeBuyModal();
 }
 
 document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn ? submitBtn.textContent : 'Добавить';
-    if (submitBtn) {
-        submitBtn.textContent = 'Загрузка...';
-        submitBtn.disabled = true;
-    }
+    if (submitBtn) { submitBtn.textContent = 'Загрузка...'; submitBtn.disabled = true; }
 
     try {
         let photoUrl = null;
-
         if (currentPhotoBase64) {
             const uploadResponse = await fetch('/api/upload-photo', {
                 method: 'POST',
@@ -237,11 +234,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
                 body: JSON.stringify({ photo: currentPhotoBase64 })
             });
             const uploadData = await uploadResponse.json();
-            
-            if (!uploadResponse.ok) {
-                throw new Error(uploadData.error || 'Ошибка загрузки фото');
-            }
-            
+            if (!uploadResponse.ok) throw new Error(uploadData.error || 'Ошибка загрузки фото');
             photoUrl = uploadData.url;
         }
 
@@ -269,32 +262,22 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Ошибка добавления:', error);
     } finally {
-        if (submitBtn) {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        }
+        if (submitBtn) { submitBtn.textContent = originalText; submitBtn.disabled = false; }
     }
 });
 
 async function deleteAccount(accountId, event) {
     event.stopPropagation();
     if (!confirm('Удалить этот аккаунт?')) return;
-
     try {
         const response = await fetch(`/api/accounts/${accountId}`, { method: 'DELETE' });
-        if (response.ok) {
-            await loadAccounts();
-            tg.HapticFeedback?.notificationOccurred('success');
-        }
-    } catch (error) {
-        console.error('Ошибка удаления:', error);
-    }
+        if (response.ok) { await loadAccounts(); tg.HapticFeedback?.notificationOccurred('success'); }
+    } catch (error) { console.error('Ошибка удаления:', error); }
 }
 
 document.getElementById('addModal').addEventListener('click', (e) => {
     if (e.target.id === 'addModal') closeAddModal();
 });
-
 document.getElementById('buyModal').addEventListener('click', (e) => {
     if (e.target.id === 'buyModal') closeBuyModal();
 });
@@ -310,8 +293,184 @@ document.getElementById('searchInput').addEventListener('input', () => {
     renderAccounts(filtered);
 });
 
-// Запускаем загрузку при старте
-loadAccounts();
+
+// ================= УСЛУГИ =================
+
+function previewServiceImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentServicePhotoBase64 = e.target.result;
+            document.getElementById('servicePhotoPreview').innerHTML = 
+                `<img src="${currentServicePhotoBase64}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+async function loadServices() {
+    try {
+        const response = await fetch('/api/services');
+        const services = await response.json();
+        allServices = services;
+        renderServices(services);
+    } catch (error) {
+        console.error('Ошибка загрузки услуг:', error);
+    }
+}
+
+function renderServices(services) {
+    const list = document.getElementById('servicesList');
+    const emptyState = document.getElementById('servicesEmptyState');
+
+    if (services.length === 0) {
+        list.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    list.style.display = 'block';
+    emptyState.style.display = 'none';
+
+    list.innerHTML = services.map((service, index) => `
+        <div class="account-card service-card" onclick="openServiceModal('${service._id}')">
+            ${index === 0 ? `
+                <div class="top-badge service-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    ТОП УСЛУГА
+                </div>
+            ` : ''}
+            ${isAdmin ? `<button class="delete-btn" onclick="deleteService('${service._id}', event)">УДАЛИТЬ</button>` : ''}
+            
+            ${service.photo 
+                ? `<img src="${service.photo}" class="account-photo" alt="Услуга" loading="lazy">`
+                : `<div class="account-photo-placeholder">🎯</div>`
+            }
+            
+            <div class="account-body">
+                <div class="account-description">${service.description}</div>
+                
+                <div class="account-footer">
+                    <div class="account-price">${service.price.toLocaleString()} ₽</div>
+                    <button class="btn-details service-btn">Заказать ›</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddServiceModal() {
+    currentServicePhotoBase64 = null;
+    document.getElementById('addServiceModal').classList.add('active');
+}
+
+function closeAddServiceModal() {
+    document.getElementById('addServiceModal').classList.remove('active');
+    document.getElementById('addServiceForm').reset();
+    document.getElementById('servicePhotoPreview').innerHTML = '';
+    currentServicePhotoBase64 = null;
+}
+
+function openServiceModal(serviceId) {
+    const service = allServices.find(s => String(s._id) === String(serviceId));
+    if (service) {
+        currentService = service;
+        document.getElementById('serviceDetails').innerHTML = `
+            ${service.photo ? `<img src="${service.photo}" class="buy-photo">` : ''}
+            <div class="buy-title">${service.description}</div>
+            <div class="buy-price">${service.price.toLocaleString()} ₽</div>
+        `;
+        document.getElementById('serviceModal').classList.add('active');
+    }
+}
+
+function closeServiceModal() {
+    document.getElementById('serviceModal').classList.remove('active');
+    currentService = null;
+}
+
+function contactSellerService() {
+    if (!currentService) return;
+    const message = `Привет! Хочу заказать услугу: "${currentService.description}" за ${currentService.price.toLocaleString()} ₽. Расскажите подробнее!`;
+    tg.openTelegramLink(`https://t.me/${SELLER_USERNAME}?text=${encodeURIComponent(message)}`);
+    closeServiceModal();
+}
+
+document.getElementById('addServiceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : 'Добавить';
+    if (submitBtn) { submitBtn.textContent = 'Загрузка...'; submitBtn.disabled = true; }
+
+    try {
+        let photoUrl = null;
+        if (currentServicePhotoBase64) {
+            const uploadResponse = await fetch('/api/upload-service-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: currentServicePhotoBase64 })
+            });
+            const uploadData = await uploadResponse.json();
+            if (!uploadResponse.ok) throw new Error(uploadData.error || 'Ошибка загрузки фото');
+            photoUrl = uploadData.url;
+        }
+
+        const service = {
+            description: document.getElementById('serviceDescription').value,
+            price: parseInt(document.getElementById('servicePrice').value),
+            photo: photoUrl
+        };
+
+        const response = await fetch('/api/services', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(service)
+        });
+
+        if (response.ok) {
+            closeAddServiceModal();
+            await loadServices();
+            tg.HapticFeedback?.notificationOccurred('success');
+        }
+    } catch (error) {
+        console.error('Ошибка добавления услуги:', error);
+    } finally {
+        if (submitBtn) { submitBtn.textContent = originalText; submitBtn.disabled = false; }
+    }
+});
+
+async function deleteService(serviceId, event) {
+    event.stopPropagation();
+    if (!confirm('Удалить эту услугу?')) return;
+    try {
+        const response = await fetch(`/api/services/${serviceId}`, { method: 'DELETE' });
+        if (response.ok) { await loadServices(); tg.HapticFeedback?.notificationOccurred('success'); }
+    } catch (error) { console.error('Ошибка удаления:', error); }
+}
+
+document.getElementById('addServiceModal').addEventListener('click', (e) => {
+    if (e.target.id === 'addServiceModal') closeAddServiceModal();
+});
+
+document.getElementById('serviceModal').addEventListener('click', (e) => {
+    if (e.target.id === 'serviceModal') closeServiceModal();
+});
+
+document.getElementById('servicesSearchInput').addEventListener('input', () => {
+    const searchTerm = document.getElementById('servicesSearchInput').value.toLowerCase().trim();
+    const filtered = searchTerm === '' 
+        ? allServices 
+        : allServices.filter(s => {
+            const text = (s.description || '').toLowerCase();
+            return text.includes(searchTerm);
+        });
+    renderServices(filtered);
+});
+
+
 // ================= ИНДИВИДУАЛЬНЫЙ ЗАКАЗ =================
 
 function openCustomOrderModal() {
@@ -320,8 +479,9 @@ function openCustomOrderModal() {
 
 function closeCustomOrderModal() {
     document.getElementById('customOrderModal').classList.remove('active');
-    // Сброс формы при закрытии
     document.getElementById('customStars').value = '';
+    document.getElementById('customWinRate').value = '';
+    document.getElementById('customDescription').value = '';
     document.getElementById('skinsContainer').innerHTML = `
         <div class="skin-input-row">
             <input type="text" class="form-input skin-input" placeholder="Название скина (например: Колл)">
@@ -343,34 +503,26 @@ function addSkinField() {
 
 function removeSkinField(btn) {
     const container = document.getElementById('skinsContainer');
-    // Не удаляем последнее поле, чтобы всегда было хотя бы одно
     if (container.children.length > 1) {
         btn.parentElement.remove();
     } else {
-        // Если поле последнее, просто очищаем его
         btn.previousElementSibling.value = '';
     }
 }
 
 function submitCustomOrder() {
-    // 1. Собираем данные
     const accType = document.querySelector('input[name="accType"]:checked').value;
     const stars = document.getElementById('customStars').value || 'Не указано';
     const winRate = document.getElementById('customWinRate').value || 'Не указано';
     const description = document.getElementById('customDescription').value.trim() || 'Не указано';
     
-    // Собираем все непустые названия скинов
     const skinInputs = document.querySelectorAll('.skin-input');
     const skins = [];
     skinInputs.forEach(input => {
-        if (input.value.trim() !== '') {
-            skins.push(input.value.trim());
-        }
+        if (input.value.trim() !== '') skins.push(input.value.trim());
     });
-
     const skinsText = skins.length > 0 ? skins.join(', ') : 'Не указаны';
 
-    // 2. Формируем красивое сообщение
     const message = `🛠️ *НОВАЯ ЗАЯВКА НА ИНДИВИДУАЛЬНЫЙ ЗАКАЗ!*
 
 👤 *Тип аккаунта:* ${accType}
@@ -381,10 +533,15 @@ function submitCustomOrder() {
 
 Жду ответа по стоимости и срокам!`;
 
-    // 3. Отправляем тебе в Telegram
     tg.openTelegramLink(`https://t.me/${SELLER_USERNAME}?text=${encodeURIComponent(message)}`);
-    
-    // 4. Закрываем модалку и показываем вибрацию
     closeCustomOrderModal();
     tg.HapticFeedback?.notificationOccurred('success');
 }
+
+document.getElementById('customOrderModal').addEventListener('click', (e) => {
+    if (e.target.id === 'customOrderModal') closeCustomOrderModal();
+});
+
+// ================= ЗАПУСК ПРИ СТАРТЕ =================
+loadAccounts();
+loadServices();
