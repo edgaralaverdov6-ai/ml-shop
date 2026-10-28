@@ -32,49 +32,81 @@
             </div>
         </header>
 
-        <!-- Поиск и фильтры -->
-        <div class="search-section">
-            <div class="search-box">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" id="searchInput" placeholder="Поиск по аккаунтам...">
+        <!-- ТАБЫ: ПРОДАЖА / УСЛУГИ -->
+        <div class="tabs">
+            <button class="tab active" data-tab="sale" onclick="switchTab('sale')">🛒 Продажа</button>
+            <button class="tab" data-tab="services" onclick="switchTab('services')">🎯 Услуги</button>
+        </div>
+
+        <!-- РАЗДЕЛ ПРОДАЖИ -->
+        <div id="saleSection">
+            <!-- Поиск и фильтры -->
+            <div class="search-section">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Поиск по аккаунтам...">
+                </div>
+                <button class="filter-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                    </svg>
+                    Фильтры
+                </button>
             </div>
-            <button class="filter-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                </svg>
-                Фильтры
+
+            <!-- Кнопка сортировки -->
+            <button id="sortBtn" class="sort-btn" onclick="toggleSort()">
+                <span id="sortText">Сортировка по цене</span>
+                <span id="sortIcon">⇅</span>
             </button>
+
+            <!-- КНОПКА ИНДИВИДУАЛЬНОГО ЗАКАЗА -->
+            <button class="btn-custom-order" onclick="openCustomOrderModal()">
+                🛠️ Индивидуальный заказ аккаунта
+            </button>
+
+            <!-- Кнопка админа -->
+            <div class="admin-panel" id="adminPanel" style="display: none;">
+                <button class="btn-add" onclick="openAddModal()">+ Добавить аккаунт</button>
+            </div>
+
+            <!-- Список аккаунтов -->
+            <div class="accounts-list" id="accountsList"></div>
+
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <p>Пока нет аккаунтов</p>
+            </div>
         </div>
 
-        <!-- Кнопка сортировки -->
-        <button id="sortBtn" class="sort-btn" onclick="toggleSort()">
-            <span id="sortText">Сортировка по цене</span>
-            <span id="sortIcon">⇅</span>
-        </button>
+        <!-- РАЗДЕЛ УСЛУГ -->
+        <div id="servicesSection" style="display: none;">
+            <div class="search-section">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="servicesSearchInput" placeholder="Поиск по услугам...">
+                </div>
+            </div>
 
-        <!-- КНОПКА ИНДИВИДУАЛЬНОГО ЗАКАЗА -->
-        <button class="btn-custom-order" onclick="openCustomOrderModal()">
-            🛠️ Индивидуальный заказ аккаунта
-        </button>
+            <div class="admin-panel" id="adminPanelServices" style="display: none;">
+                <button class="btn-add-service" onclick="openAddServiceModal()">+ Добавить услугу</button>
+            </div>
 
-        <!-- Кнопка админа -->
-        <div class="admin-panel" id="adminPanel" style="display: none;">
-            <button class="btn-add" onclick="openAddModal()">+ Добавить аккаунт</button>
-        </div>
-
-        <!-- Список аккаунтов -->
-        <div class="accounts-list" id="accountsList"></div>
-
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">📭</div>
-            <p>Пока нет аккаунтов</p>
+            <div class="accounts-list" id="servicesList"></div>
+            <div class="empty-state" id="servicesEmptyState" style="display: none;">
+                <div class="empty-icon">🎯</div>
+                <p>Пока нет услуг</p>
+            </div>
         </div>
     </div>
 
-    <!-- Модалка добавления -->
+    <!-- Модалка добавления аккаунта -->
     <div class="modal" id="addModal">
         <div class="modal-content">
             <h2>Добавить аккаунт</h2>
@@ -127,7 +159,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ИНДИВИДУАЛЬНОГО ЗАКАЗА (ОБНОВЛЕННАЯ) -->
+    <!-- МОДАЛКА ИНДИВИДУАЛЬНОГО ЗАКАЗА -->
     <div id="customOrderModal" class="modal">
         <div class="modal-content custom-modal-content">
             <span class="close-modal" onclick="closeCustomOrderModal()" style="float: right; font-size: 28px; cursor: pointer; color: rgba(255,255,255,0.5);">&times;</span>
@@ -152,13 +184,11 @@
                 <input type="number" id="customStars" class="form-input" placeholder="Например: 50" min="0">
             </div>
 
-            <!-- НОВОЕ ПОЛЕ: Процент побед -->
             <div class="form-group">
                 <label class="form-label" for="customWinRate">Процент побед (%):</label>
                 <input type="number" id="customWinRate" class="form-input" placeholder="Например: 65" min="0" max="100">
             </div>
 
-            <!-- НОВОЕ ПОЛЕ: Краткое описание -->
             <div class="form-group">
                 <label class="form-label" for="customDescription">Краткое описание:</label>
                 <textarea id="customDescription" class="form-input" placeholder="Например: Аккаунт для турниров, без банов, хороший ММР..." rows="3" style="resize: vertical; min-height: 80px;"></textarea>
@@ -176,6 +206,43 @@
             </div>
 
             <button class="btn-submit-order" onclick="submitCustomOrder()">📩 Отправить заявку продавцу</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ДОБАВЛЕНИЯ УСЛУГИ -->
+    <div class="modal" id="addServiceModal">
+        <div class="modal-content">
+            <h2>Добавить услугу</h2>
+            <form id="addServiceForm">
+                <div class="form-group">
+                    <label>📸 Фото услуги</label>
+                    <input type="file" id="servicePhoto" accept="image/*" onchange="previewServiceImage(event)">
+                    <div class="photo-preview" id="servicePhotoPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Описание услуги</label>
+                    <textarea id="serviceDescription" placeholder="Например: Прокачка ранга до Мифика за 3 дня..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <input type="number" id="servicePrice" required placeholder="1500">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeAddServiceModal()">Отмена</button>
+                    <button type="submit" class="btn-submit">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ПРОСМОТРА УСЛУГИ -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content buy-modal">
+            <div id="serviceDetails"></div>
+            <div class="form-actions">
+                <button class="btn-cancel" onclick="closeServiceModal()">Закрыть</button>
+                <button class="btn-submit" onclick="contactSellerService()">Заказать</button>
+            </div>
         </div>
     </div>
 
