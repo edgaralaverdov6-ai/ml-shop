@@ -71,6 +71,84 @@ body::before {
     letter-spacing: 0.5px;
 }
 
+/* ================= СТИЛЬНЫЕ ТАБЫ (ВКЛАДКИ) ================= */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.tab {
+    flex: 1;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+}
+
+/* Эффект блика при наведении */
+.tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.tab:hover::before {
+    left: 100%;
+}
+
+.tab:hover:not(.active) {
+    background: rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Активная вкладка - премиум стиль */
+.tab.active {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    border-color: rgba(139, 92, 246, 0.8);
+    color: #fff;
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+    transform: translateY(0);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    border-radius: 2px;
+}
+
 /* ПОИСК */
 .search-section {
     display: flex;
@@ -129,45 +207,6 @@ body::before {
 
 .filter-btn:hover {
     background: rgba(139, 92, 246, 0.3);
-}
-
-/* ТЕГИ ФИЛЬТРОВ */
-.filter-tags {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 20px;
-    scrollbar-width: none;
-}
-
-.filter-tags::-webkit-scrollbar {
-    display: none;
-}
-
-.tag {
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.85em;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s;
-}
-
-.tag:hover {
-    background: rgba(139, 92, 246, 0.2);
-    border-color: rgba(139, 92, 246, 0.4);
-}
-
-.tag.active {
-    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    border-color: #8b5cf6;
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
 }
 
 /* АДМИН ПАНЕЛЬ */
@@ -612,68 +651,6 @@ body::before {
     .account-price { font-size: 1.5em; }
 }
 
-/* Кнопка загрузки еще (если вдруг понадобится) */
-.btn-load-more {
-    width: 100%;
-    padding: 16px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(109, 40, 217, 0.2) 100%);
-    border: 1px solid rgba(139, 92, 246, 0.4);
-    border-radius: 12px;
-    color: #fff;
-    font-weight: 700;
-    font-size: 1em;
-    cursor: pointer;
-    transition: all 0.3s;
-    backdrop-filter: blur(5px);
-}
-
-.btn-load-more:active {
-    transform: scale(0.98);
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.4) 100%);
-}
-
-/* Кнопка сортировки */
-.sort-btn {
-    width: 100%;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 12px;
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
-    font-size: 0.95em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.sort-btn:hover {
-    background: rgba(139, 92, 246, 0.3);
-    color: #fff;
-}
-
-.sort-btn:active {
-    transform: scale(0.98);
-}
-
-.sort-btn.active-asc {
-    background: rgba(74, 222, 128, 0.15);
-    border-color: rgba(74, 222, 128, 0.5);
-    color: #4ade80;
-}
-
-.sort-btn.active-desc {
-    background: rgba(248, 113, 113, 0.15);
-    border-color: rgba(248, 113, 113, 0.5);
-    color: #f87171;
-}
-
 /* ========================================== */
 /* КНОПКА ИНДИВИДУАЛЬНОГО ЗАКАЗА - ПРЕМИУМ    */
 /* ========================================== */
@@ -700,7 +677,6 @@ body::before {
     overflow: hidden;
 }
 
-/* Блик сверху для эффекта стекла */
 .btn-custom-order::before {
     content: '';
     position: absolute;
@@ -812,7 +788,10 @@ body::before {
     cursor: pointer;
 }
 .btn-submit-order:active { transform: scale(0.98); }
-/* ================= КНОПКА ДОБАВЛЕНИЯ УСЛУГИ ================= */
+
+/* ========================================== */
+/* СТИЛИ ДЛЯ УСЛУГ (ЗЕЛЁНЫЙ АКЦЕНТ)           */
+/* ========================================== */
 .btn-add-service {
     width: 100%;
     padding: 14px;
@@ -832,7 +811,6 @@ body::before {
     box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6);
 }
 
-/* ================= СТИЛИ ДЛЯ УСЛУГ ================= */
 .service-card {
     border-color: rgba(16, 185, 129, 0.2);
 }
