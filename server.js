@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB подключена'))
   .catch(err => console.error('❌ Ошибка MongoDB:', err));
 
+// ================= СХЕМА АККАУНТОВ =================
 const accountSchema = new mongoose.Schema({
   name: String,
   rank: String,
@@ -37,6 +38,7 @@ const accountSchema = new mongoose.Schema({
 });
 const Account = mongoose.model('Account', accountSchema);
 
+// ================= СХЕМА ПОЛЬЗОВАТЕЛЕЙ =================
 const userSchema = new mongoose.Schema({
   telegramId: { type: Number, required: true, unique: true },
   username: String,
@@ -46,6 +48,15 @@ const userSchema = new mongoose.Schema({
   lastVisit: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
+
+// ================= СХЕМА УСЛУГ =================
+const serviceSchema = new mongoose.Schema({
+  description: String,
+  photo: String,
+  price: Number,
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+const Service = mongoose.model('Service', serviceSchema);
 
 // ================= МИГРАЦИЯ СТАРЫХ ФОТО =================
 app.get('/migrate-photos', async (req, res) => {
@@ -98,7 +109,7 @@ app.get('/migrate-photos', async (req, res) => {
   }
 });
 
-// ================= API РОУТЫ =================
+// ================= API РОУТЫ ДЛЯ АККАУНТОВ =================
 
 app.get('/api/accounts', async (req, res) => {
   try {
@@ -109,6 +120,7 @@ app.get('/api/accounts', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 app.post('/api/upload-photo', async (req, res) => {
   try {
     const { photo } = req.body;
@@ -147,6 +159,58 @@ app.delete('/api/accounts/:id', async (req, res) => {
   }
 });
 
+// ================= API РОУТЫ ДЛЯ УСЛУГ =================
+
+app.get('/api/services', async (req, res) => {
+  try {
+    const services = await Service.find().sort({ createdAt: -1 });
+    res.json(services);
+  } catch (error) {
+    console.error('Ошибка получения услуг:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/upload-service-photo', async (req, res) => {
+  try {
+    const { photo } = req.body;
+    if (!photo) return res.status(400).json({ error: 'Нет фото' });
+
+    const result = await cloudinary.uploader.upload(photo, {
+      folder: 'mlbb-services',
+      quality: 80,
+      width: 800,
+      crop: 'limit'
+    });
+
+    res.json({ url: result.secure_url });
+  } catch (error) {
+    console.error('Ошибка загрузки фото услуги:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/services', async (req, res) => {
+  try {
+    const service = new Service({ ...req.body, createdAt: new Date() });
+    await service.save();
+    res.json(service);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/services/:id', async (req, res) => {
+  try {
+    await Service.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ================= ОБРАБОТЧИК /start =================
+
 bot.onText(/\/start/, async (msg) => {
   const userId = msg.from.id;
   const username = msg.from.username || 'нет username';
@@ -165,11 +229,11 @@ bot.onText(/\/start/, async (msg) => {
   }
 
   const notification = `
-🔔 <b>Новый пользователь!</b>
+ <b>Новый пользователь!</b>
 👤 <b>Имя:</b> ${fullName}
 🆔 <b>Username:</b> @${username}
 🔢 <b>ID:</b> <code>${userId}</code>
-📅 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
+ <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
   `;
 
   bot.sendMessage(ADMIN_ID, notification, { parse_mode: 'HTML' });
